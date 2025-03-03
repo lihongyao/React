@@ -1,12 +1,11 @@
-import React from 'react';
-import Counter from '@/components/counter/Counter';
-import User from '@/components/user/User';
+import Counter from "@/components/Counter";
+import User from "@/components/User";
 
-const App: React.FC = () => (
-  <div className='app'>
-    <Counter />
-    <User />
-  </div>
-);
-
-export default App;
+export default function App() {
+  return (
+    <div className="app">
+      <Counter />
+      <User />
+    </div>
+  );
+}

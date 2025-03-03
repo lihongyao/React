@@ -28,29 +28,33 @@ $ pnpm create vite <project-name> --template react-ts
 $ npx create-next-app@latest
 ```
 
-如果你是 Next.js 的新手，请查看 [Next.js 教程](https://nextjs.org/learn/foundations/about-nextjs)。
+> **提示**：如果你是 Next.js 的新手，请查看 [Next.js](https://nextjs.org/)。
 
-# 准备
+# 课前准备
 
-为了方便快速掌握 React 基础语法，避免配置，这里使用 Next.js 来构建。
+为了快速掌握 React 的基础语法，并避免繁琐的环境配置，我们使用 **Next.js** 进行构建。
 
-1）构建项目：打开终端输入如下指令构建项目
+1️⃣ **创建项目**
+
+在终端输入以下命令：
 
 ```shell
 $ npx create-next-app@latest
 ```
 
-> 提示：填写好项目名称之后，一路回车（↩︎）即可。
+> **提示**：填写项目名称后，直接回车（↩︎）即可完成创建。
 
-2）在 VSCode 中打开项目
+2️⃣ **在 VSCode 中打开项目**
+
+使用以下命令：
 
 ```shell
-$ code react-basic	
+$ code react-tutorials
 ```
 
-> 提示：这里的 \<react-basic> 为我在创建项目时定义的 **项目名称**。
+> **提示**：\<react-tutorials> 是创建项目时定义的 **项目名称**，请根据实际情况替换。
 
-3）替换 `app/page.tsx` 内容
+3️⃣ **替换 `app/page.tsx` 内容**
 
 ```tsx
 import React from "react";
@@ -60,98 +64,16 @@ export default function Page() {
 }
 ```
 
-4）启动项目
+4️⃣ **启动项目**
 
 ```shell
 $ npm run dev
 ```
 
-> 提示：在浏览器中访问 http://localhost:3000/ 查看页面效果
+> **提示**：打开浏览器，访问 http://localhost:3000/ 查看页面效果。
 
 # 结语
 
-再次说明，本指南不是详细教程，而是自己在学习 React.js 中的笔记，在章节中，如果没有特别有必要说明的地方，我基本都会直接贴上官方教程的链接。
+本指南并非详尽的教程，而是我在学习 React.js 过程中的笔记整理。在各个章节中，除非有特别需要说明的地方，我通常会直接提供官方文档的链接。
 
-我认为，这可以作为你学习React.js 的一个大纲。
-
-# 初体验
-
-## 1. 安装
-
-这里使用 vite 构建项目
-
-```shell
-$ pnpm create vite react-tutorials --template react-ts
-$ cd react-tutorials && pnpm install && pnpm run dev 
-```
-
-## 2. 配置Vite
-
-开始之前，我们简单的配置一下 `vite` 路径解析：
-
-```shell
-$ pnpm add @types/node
-```
-
-> **`vite.config.ts`**
-
-```ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { resolve } from "path";
-
-export default defineConfig({
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-    },
-  },
-  plugins: [react()],
-});
-```
-
-在 **`tsconfig.json`** 文件中的 `compilerOptions` 字段下添加如下代码。
-
-```ts
-"baseUrl": ".",
-"paths": {
-  "@/*": ["src/*"]
-}
-```
-
-## 3. 文件解读
-
-> **`src/main.tsx`**
-
-```tsx
-// -- 引入相关依赖
-import React from "react";
-import ReactDOM from "react-dom/client";
-// -- 引入根组件
-import App from "@/App.tsx";
-
-// -- 创建并渲染根节点
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-```
-
-> **`src/App.tsx`**
-
-```tsx
-import React from "react";
-
-const App: React.FC = () => {
-  return (
-    <div className="app">
-      <h3>Hello, React.js!</h3>
-    </div>
-  );
-};
-
-export default App;
-```
-
-> Tips：此时页面显示 → `Hello, React.js！`
+我希望它能作为你学习 React.js 的一个大纲，帮助你快速了解核心概念，并结合官方文档进行深入学习。

@@ -1,19 +1,23 @@
-/*
- * @Author: Lee
- * @Date: 2023-02-17 13:55:31
- * @LastEditors: Lee
- * @LastEditTime: 2023-02-17 17:31:32
- * @Description:
- */
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
+import type { UserConfig, ConfigEnv } from 'vite';
+import { defineConfig, loadEnv } from 'vite'
+import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react'
+
+// https://cn.vitejs.dev/config/
+export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
+
+  // -- 获取当前工作目录路径
+  const root = process.cwd();
+  const pathResolve = (path: string) => resolve(root, '.', path);
+  // -- 获取环境变量
+  const env = loadEnv(mode, root, "VITE_");
+  console.log(env);
+  return {
+    resolve: {
+      alias: {
+        "@": pathResolve('src'),
+      },
     },
-  },
+    plugins: [react()],
+  };
 });
