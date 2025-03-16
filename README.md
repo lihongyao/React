@@ -14,63 +14,168 @@
 
 ## Vite
 
+**[Vite](https://cn.vitejs.dev/)** 是一种新型的现代前端构建工具，旨在通过原生 ES 模块支持提供极快的冷启动速度和高效的开发体验。
+
 ```shell
 $ pnpm create vite <project-name> --template react-ts
 ```
 
-> Tips：参考 <https://cn.vitejs.dev/guide/#scaffolding-your-first-vite-project>
+> **提示**：参考 [搭建第一个 Vite 项目 >>](<https://cn.vitejs.dev/guide/#scaffolding-your-first-vite-project>)
 
 ## Next.js
 
-**[Next.js](https://nextjs.org/) 是一个全栈式的 React 框架**。它用途广泛，可以让你创建任意规模的 React 应用——可以是静态博客，也可以是复杂的动态应用。要创建一个新的 Next.js 项目，请在你的终端运行：
+**[Next.js](https://nextjs.org/)** 是一个基于 React 的全栈框架，专为构建高性能、可扩展的 Web 应用而设计，支持服务器端渲染（SSR）、静态站点生成（SSG）和 API 路由等功能，简化了 React 应用的开发流程
 
 ```shell
 $ npx create-next-app@latest
 ```
 
-> **提示**：如果你是 Next.js 的新手，请查看 [Next.js](https://nextjs.org/)。
+> **提示**：参考 [Automatic installation >>](https://nextjs.org/docs/app/getting-started/installation#automatic-installation)
 
 # 课前准备
 
-为了快速掌握 React 的基础语法，并避免繁琐的环境配置，我们使用 **Next.js** 进行构建。
+综合考虑，使用 Vite.js 构建项目
 
-1️⃣ **创建项目**
+## 1️⃣ **创建项目**
 
 在终端输入以下命令：
 
 ```shell
-$ npx create-next-app@latest
+$ pnpm create vite react-tutorials --template react-ts && cd react-tutorials && pnpm install && code .
 ```
 
-> **提示**：填写项目名称后，直接回车（↩︎）即可完成创建。
+> **提示**：上面的指令会创建一个项目，同时安装依赖并在 vscode 中打开项目。
 
-2️⃣ **在 VSCode 中打开项目**
+## 2️⃣ **目录结构**
 
-使用以下命令：
+```
+react-tutorials
+.
+├── node_modules/     # 存放项目依赖包，由包管理器自动生成和管理
+├── public/           # 存放静态资源，打包时直接拷贝到根目录
+├── src/              # 项目源码目录        
+│   ├── App.tsx       # 根组件       
+│   ├── index.css     # 全局样式
+│   ├── main.tsx      # 入口文件          
+│	  └──	vite-env.d.ts # Vite 环境变量类型声明       
+├── .gitignore        # 指定 Git 忽略的文件和目录          
+├── eslint.config.js  # ESLint 配置文件，用于代码规范检查           
+├── index.html        # 应用入口 HTML 文件      
+├── package.json      # 项目元数据和依赖信息           
+├── pnpm-lock.yaml    # pnpm 的依赖锁定文件
+├── tsconfig.app.json # TypeScript 配置文件，分别用于应用、全局和 Node.js 环境的配置
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.js    # Vite 构建工具配置文件      
+```
+
+> **提示**：参照上述目录结构，删除 **`/src`** 目录下的其他文件即可。
+
+## 3️⃣ **配置项目 - 取别名 alias**
 
 ```shell
-$ code react-tutorials
+$ pnpm add -D @types/node
 ```
 
-> **提示**：\<react-tutorials> 是创建项目时定义的 **项目名称**，请根据实际情况替换。
+> **`vite.config.ts`**
 
-3️⃣ **替换 `app/page.tsx` 内容**
+```ts
+import type { UserConfig, ConfigEnv } from 'vite';
+import { defineConfig } from 'vite'
+import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react'
+
+// https://cn.vitejs.dev/config/
+export default defineConfig((_config: ConfigEnv): UserConfig => {
+
+  // -- 获取当前工作目录路径
+  const root = process.cwd();
+  const pathResolve = (path: string) => resolve(root, '.', path);
+
+  return {
+    resolve: {
+      alias: {
+        "@": pathResolve('src'),
+      },
+    },
+    plugins: [react()],
+  };
+});
+```
+
+> **`tsconfig.app.json`**
 
 ```tsx
-import React from "react";
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+  },
+}
+```
 
-export default function Page() {
+## 4️⃣ **配置 tailwindscss**
+
+1. 安装 Tailwind CSS
+
+   ```shell
+   $ pnpm add tailwindcss @tailwindcss/vite
+   ```
+
+2. 配置 Vite 插件：在 vite.config.ts 配置文件中添加 @tailwindcss/vite 插件
+
+   ```ts
+   import { defineConfig } from 'vite'
+   import tailwindcss from '@tailwindcss/vite'
+   export default defineConfig({
+     plugins: [
+       ...
+       tailwindcss(),
+     ],
+   })
+   ```
+
+3. 导入 Tailwind CSS：在 **`index.css`** 中导入 Tailwind CSS 的内容
+
+```css
+@import "tailwindcss";
+```
+
+## 5️⃣ 修改文件
+
+> `@/main.tsx`
+
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "@/App";
+import './index.css';
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+```
+
+> `@/App.tsx`
+
+```tsx
+export default function App() {
   return <div>Hello, React.js!</div>;
 }
 ```
 
-4️⃣ **启动项目**
+## 6️⃣ 启动项目
 
 ```shell
-$ npm run dev
+$ pnpm dev
 ```
 
-> **提示**：打开浏览器，访问 http://localhost:3000/ 查看页面效果。
+> **提示**：打开浏览器，访问 http://localhost:5173/  查看页面效果，输出：*Hello,React.js*
 
 # 结语
 
