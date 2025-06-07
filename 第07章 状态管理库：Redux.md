@@ -1893,75 +1893,81 @@ createRoot(document.getElementById("root")!).render(
 
 ## Examples：持久化
 
-**👉 `@/stores/persistor.ts`**
+### 安装依赖
 
-```ts
-const REDUX_PERSIST_KEY = 'reduxState';
-export const loadState = (): unknown => {
-  try {
-    const serializedState = localStorage.getItem(REDUX_PERSIST_KEY);
-    if (!serializedState) return undefined;
-    return JSON.parse(serializedState);
-  } catch (err) {
-    console.error('Failed to load state from localStorage', err);
-    return undefined;
-  }
-};
-
-export const saveState = (state: unknown) => {
-  try {
-    const serializedState = JSON.stringify(state);
-    localStorage.setItem(REDUX_PERSIST_KEY, serializedState);
-  } catch (err) {
-    console.error('Failed to save state to localStorage', err);
-  }
-};
+```shell
+$ pnpm add redux-persist
 ```
+
+### 配置Redux Store
 
 **👉 `@/stores/index.ts`**
 
 ```ts
-import { configureStore } from '@reduxjs/toolkit';
-import type { ThunkAction, UnknownAction } from '@reduxjs/toolkit';
-import { loadState, saveState } from '@/store/persistor';
-import userReducer from '@/store/slices/userSlice';
-import counterReducer from '@/store/slices/counterSlice';
-
-// 👉 自动调用 combineReducers 合并 reducers
-const store = configureStore({
-  reducer: {
-    user: userReducer,
-    counter: counterReducer,
-  },
-  preloadedState: loadState(), // 使用 localStorage 里的数据初始化 store
-});
-
-// 👉 监听 store 变化，持久化到 localStorage
-store.subscribe(() => {
-  saveState(store.getState());
-});
-
-
-// 👉 TypeScript：从 store 本身推断出 RootState 和 AppDispatch 类型
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>;
-
-
-// 👉 定义 Chunk 类型
 /**
- * AppThunk 类型定义
- * @template ReturnType - Thunk 函数的返回值类型，默认为 void
- * @param ReturnType - 返回值类型
- * @returns ThunkAction
+ * Redux Store 配置入口
+ * 集成 redux - persist 实现状态持久化（localStorage）
  */
-export type AppThunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  RootState,
-  unknown, // 如果没有额外的参数，可以保持为 unknown
-  UnknownAction // 如果有特定的 action 类型，可以替换为更具体的类型
->;
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // 默认使用 localStorage
+import userReducer from '@/stores/slices/userSlice';
+import appReducer from './slices/appSlice';
 
-export default store;
+// =============================================
+// 持久化配置
+// =============================================
+const persistConfig = {
+  key: 'reduxState',     // localStorage 存储的键名
+  storage,              // 使用的存储引擎（默认 localStorage）
+  // whitelist: ['user'], // 可选：仅持久化指定 reducer
+  // blacklist: ['app']   // 可选：排除指定 reducer
+};
+
+// 👉 合并所有 reducer 并添加持久化能力
+const persistedReducer = persistReducer(
+  persistConfig,
+  combineReducers({
+    app: appReducer,
+    user: userReducer
+  })
+);
+
+// =============================================
+// Redux Store 配置
+// =============================================
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false // 关闭序列化检查（避免 redux-persist 的警告）
+    }),
+});
+
+// 👉 创建持久化 store 实例
+export const persistor = persistStore(store);
+
+// =============================================
+// 类型导出（TypeScript 专用）
+// =============================================
+export type AppDispatch = typeof store.dispatch;  // 用于 dispatch 类型推断
+export type RootState = ReturnType<typeof store.getState>; // 全局状态类型
+```
+
+**👉 `@/main.tsx`**
+
+```tsx
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from '@/stores';
+...
+
+createRoot(document.getElementById('root')!).render(
+	<Provider store={store}>
+		<PersistGate loading={null} persistor={persistor}>
+			<App/>
+		</PersistGate>
+	</Provider>
+);
 ```
 
 

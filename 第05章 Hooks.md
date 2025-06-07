@@ -2,9 +2,9 @@
 
 > @See https://zh-hans.react.dev/reference/react/hooks
 
-Hook 是 React 16.8 引入的特性，**Hook** 使得在组件中使用 React 的功能变得更加便捷。你可以使用内置的 Hook，也可以创建自定义 Hook 来满足特殊需求。
+在 React 中，以 `use` 开头命名的函数被称为 **[Hook](https://zh-hans.react.dev/reference/react)**。
 
-> **提示**：**Hook** 只能在 **组件的顶层** 或自定义的 Hook 中调用，不能在循环或条件语句中调用。如果有这样的需求，应该提取成新的组件并将状态管理移入其中。
+Hook 是 React 16.8 引入的特性，**Hook** 使得在组件中使用 React 的功能变得更加便捷。你可以使用内置的 Hook，也可以创建自定义 Hook 来满足特殊需求。
 
 # API
 
@@ -1412,3 +1412,152 @@ export default function Page() {
 1. 状态简单：使用 useState 或 Props。
 2. 状态复杂但作用域局限：使用 useReducer 或 Context + useReducer。
 3. 状态复杂且跨组件范围大：使用 Redux Toolkit 或轻量状态管理工具（如 Zustand）。
+
+# React 如何管理Hooks？
+
+> @See https://zh-hans.react.dev/reference/rules/rules-of-hooks
+
+**Hook** 只能在 **组件的顶层** 或自定义的 Hook 中调用，**不要在循环、条件语句、嵌套函数或 `try`/`catch`/`finally` 代码块中调用 Hook**。
+
+核心原因在于React 内部通过 **单向链表** 来跟踪和管理 Hooks。
+
+每个 Hook 节点包含：
+
+- `memoizedState`：当前状态值（如 `useState` 的 state）
+- `queue`：更新队列（存储 `setState` 触发的 action）
+- `next`：指向下一个 Hook 的指针
+
+每次组件渲染时，React 都会按照 Hooks 的调用顺序来更新链表中的值，例如：
+
+```tsx
+function MyComponent() {
+  const [name, setName] = useState('Alice'); // Hook 1
+  const [age, setAge] = useState(25);        // Hook 2
+  useEffect(() => {                          // Hook 3
+    console.log('Component mounted');
+  }, []);
+  // ...
+}
+```
+
+在第一次渲染时，React 会记录 Hooks 的调用顺序：
+
+1. `useState` → `name`
+2. `useState` → `age`
+3. `useEffect` → 副作用函数
+
+在后续渲染中，React 会严格按照这个顺序来匹配 Hooks 的状态和副作用。
+
+## 为什么不能在循环、条件或嵌套函数中调用 Hooks？
+
+如果在循环、条件或嵌套函数中调用 Hooks，会导致 Hooks 的调用顺序不一致，从而破坏 React 对 Hooks 的管理。
+
+### 示例 1：条件语句中调用 Hooks
+
+```tsx
+function MyComponent({ isLoggedIn }) {
+  if (isLoggedIn) {
+    const [name, setName] = useState('Alice'); // Hook 1
+  }
+  const [age, setAge] = useState(25);          // Hook 2
+  // ...
+}
+```
+
+- 如果 `isLoggedIn` 为 `true`，Hooks 的调用顺序是：
+
+  1. `useState` → `name`
+
+  2. `useState` → `age`
+
+- 如果 `isLoggedIn` 为 `false`，Hooks 的调用顺序是：
+  1. `useState` → `age`
+
+此时，React 无法正确匹配 `age` 的状态，因为调用顺序发生了变化，可能导致 bug。
+
+### 示例 2：循环中调用 Hooks
+
+```tsx
+function MyComponent({ items }) {
+  for (let i = 0; i < items.length; i++) {
+    const [value, setValue] = useState(items[i]); // Hook 1, 2, 3, ...
+  }
+  // ...
+}
+
+```
+
+- 每次渲染时，`items.length` 可能不同，导致 Hooks 的调用顺序不一致。
+- React 无法确定每个 `useState` 对应的状态，从而导致混乱。
+
+### 示例 3：嵌套函数中调用 Hooks
+
+```tsx
+function MyComponent() {
+  function handleClick() {
+    const [count, setCount] = useState(0); // 错误：嵌套函数中调用 Hook
+  }
+  // ...
+}
+```
+
+- 嵌套函数中的 Hooks 不会在组件渲染时被调用，因此 React 无法正确管理它们。
+
+## 如何避免这些问题？
+
+为了确保 Hooks 的调用顺序一致，必须遵循以下规则：
+
+1. **始终在函数组件的顶层调用 Hooks**：
+
+   - 不要在循环、条件或嵌套函数中调用 Hooks。
+   - 确保每次渲染时 Hooks 的调用顺序完全相同。
+
+2. **将条件逻辑移到 Hooks 内部**：
+
+   - 如果需要在某些条件下使用 Hooks，可以将条件逻辑移到 Hooks 内部。
+
+   - 正确示例：
+
+     ```tsx
+     function MyComponent({ isLoggedIn }) {
+       const [name, setName] = useState(isLoggedIn ? 'Alice' : ''); // 条件逻辑在 Hook 内部
+       const [age, setAge] = useState(25);
+       // ...
+     }
+     ```
+
+3. **使用 `useEffect` 处理副作用**：
+
+   - 如果需要在某些条件下执行副作用，可以在 `useEffect` 内部添加条件判断。
+
+   - 正确示例：
+
+     ```tsx
+     function MyComponent({ isLoggedIn }) {
+       useEffect(() => {
+         if (isLoggedIn) {
+           console.log('User is logged in');
+         }
+       }, [isLoggedIn]); // 依赖项变化时执行
+       // ...
+     }
+     ```
+
+## React 如何检测违规行为？
+
+React 提供了一个 ESLint 插件（`eslint-plugin-react-hooks`），用于检测 Hooks 的违规使用。如果违反了 Hooks 的规则，React 会在开发模式下抛出错误。
+
+例如：
+
+```
+React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render.
+```
+
+## 总结
+
+1. React 依赖于 Hooks 的调用顺序来管理状态和副作用。
+2. 在循环、条件或嵌套函数中调用 Hooks 会导致调用顺序不一致，从而引发 bug。
+3. 始终在函数组件的顶层调用 Hooks，并将条件逻辑移到 Hooks 内部。
+4. 使用 ESLint 插件可以帮助检测和避免违规行为。
+
+https://ahooks.js.org/zh-CN/

@@ -2,27 +2,87 @@
 
 # 概述
 
-React Query（现称为 TanStack Query）是一个用于管理 React 应用中服务器状态的库，简化了数据获取、缓存、同步和更新的过程。
+TanStack Query（前生是 React Query ）是专为 React 应用设计的服务器状态管理库，提供开箱即用的数据获取、缓存和同步功能。
 
-> **提示**：快速了解 React Query，推荐观看 [《100秒学会React Query》 - Fireship](https://www.bilibili.com/video/BV1ic411x7L7/)
-
-> 英文文档：https://tanstack.com/query/latest/docs/framework/react/overview *（推荐）*
-
-> 中文文档：https://cangsdarm.github.io/react-query-web-i18n/react/ *（更新滞后）*
+> **学习资源**：
+>
+> 🎬 [《100秒学会React Query》 - Fireship](https://www.bilibili.com/video/BV1ic411x7L7/)
+>
+> 📘 [官方英文文档 ↪](https://tanstack.com/query/latest/docs/framework/react/overview )（推荐）
+>
+> 📚 [中文文档 ↪](https://cangsdarm.github.io/react-query-web-i18n/react/ )（更新滞后）
 
 # 核心概念
 
 ## [Queries](https://tanstack.com/query/latest/docs/framework/react/guides/queries)
 
-- 通过 useQuery 获取数据，并自动管理缓存、状态和重试机制。
-- 提供**自动缓存**、**后台数据同步**、**错误处理**和**请求去抖（debounce）**等功能。
+```tsx
+import { useQuery } from '@tanstack/react-query'
+
+const { 
+  data, 
+  isLoading, 
+  isError, 
+  error,
+  isFetching,
+  refetch 
+} = useQuery({
+  queryKey: ['todos'],
+  queryFn: fetchTodos,
+  staleTime: 5000, // 5秒后数据视为陈旧
+  refetchOnWindowFocus: true // 窗口聚焦时自动刷新
+})
+```
+
+**关键特性**：
+
+- 自动缓存（默认5分钟）
+- 后台自动刷新
+- 错误重试（默认3次）
+- 请求状态管理（`isLoading`/`isFetching`区别）
 
 ## [Mutations](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)
 
+```tsx
+import { useMutation } from '@tanstack/react-query'
+
+const mutation = useMutation({
+  mutationFn: addTodo,
+  onSuccess: () => {
+    queryClient.invalidateQueries(['todos'])
+  },
+  onError: (error) => {
+    toast.error(error.message)
+  }
+})
+
+// 使用
+mutation.mutate({ title: 'New Todo' })
+```
+
+**最佳实践**：
+
 - 通过 useMutation 处理数据提交、更新、删除等操作。
-- **不会自动缓存**，但可以在成功后手动更新查询数据。
+- 乐观更新（先更新UI再请求）。
+- 错误回滚
+- 并行/串行请求处理
 
 ## [Query Invalidation](https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation)
+
+```tsx
+// 使特定查询失效
+queryClient.invalidateQueries(['todos'])
+
+// 使所有todos相关查询失效
+queryClient.invalidateQueries({ queryKey: ['todos'] })
+
+// 精确控制失效范围
+queryClient.invalidateQueries({
+  predicate: (query) => 
+    query.queryKey[0] === 'todos' && 
+    query.queryKey[1]?.status === 'done'
+})
+```
 
 - **手动失效缓存数据**，触发数据重新获取，确保数据同步更新。
 
