@@ -1896,7 +1896,7 @@ createRoot(document.getElementById("root")!).render(
 ### 安装依赖
 
 ```shell
-$ pnpm add redux-persist
+$ pnpm add redux-persist redux-persist-transform-filter
 ```
 
 ### 配置Redux Store
