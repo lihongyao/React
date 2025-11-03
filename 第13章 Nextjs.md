@@ -2,12 +2,12 @@
 
 [Next.js ↪](https://nextjs.org/) 是一个基于 React 的全栈框架，用于快速构建高性能的服务器端渲染（SSR）和静态生成（SSG）网页应用。
 
-本文主要记录 Next.js 的学习路程，便于日后回溯，非 [官方指南 ↪](https://nextjs.org/)。
+本文主要记录 Next.js 的学习路程，便于日后回溯，非 官方指南，中文指南请参考 [这里 ↪](https://nextjs.net.cn/)
 
 相关环境：
 
-- Node.js：v24.8.0
-- pnpm：v10.17.1
+- Node.js：v25.1.0
+- pnpm：v10.20.0
 - Next.js：v16
 - 路由模式：App Router
 
@@ -165,19 +165,17 @@ export default function Dashboard() {
 # 创建项目
 
 ```shell
-$ pnpm create next-app@latest nextjs-app --yes
-
+$ pnpm create next-app@latest nextjs-template [--yes]
 ✔ Would you like to use the recommended Next.js defaults? › No, customize settings
-✔ Would you like to use TypeScript? … No / [Yes]
+✔ Would you like to use TypeScript? … No / 【Yes】
 ✔ Which linter would you like to use? › Biome
-✔ Would you like to use React Compiler? … No / [Yes]
-✔ Would you like to use Tailwind CSS? … No / [Yes]
-✔ Would you like your code inside a `src/` directory? … No / [Yes]
-✔ Would you like to use App Router? (recommended) … No / [Yes]
-✔ Would you like to use Turbopack? (recommended) … No / [Yes]
-✔ Would you like to customize the import alias (`@/*` by default)? … No / [Yes]
+✔ Would you like to use React Compiler? … No / 【Yes】
+✔ Would you like to use Tailwind CSS? … No / 【Yes】
+✔ Would you like your code inside a `src/` directory? … No / 【Yes】
+✔ Would you like to use App Router? (recommended) … No / 【Yes】
+✔ Would you like to use Turbopack? (recommended) … No / 【Yes】
+✔ Would you like to customize the import alias (`@/*` by default)? … No / 【Yes】
 ✔ What import alias would you like configured? … @/*
-Creating a new Next.js app in /Users/leo/Desktop/next-xxx.
 ```
 
 > **提示**：`--yes` 会跳过提示，使用已保存的偏好或默认设置。默认配置启用 TypeScript、Tailwind、App Router 和 Turbopack，并设置导入别名 `@/*`。
@@ -185,6 +183,8 @@ Creating a new Next.js app in /Users/leo/Desktop/next-xxx.
 # 目录结构
 
 @See https://nextjs.org/docs/app/getting-started/project-structure
+
+
 
 ```shell
 $ tree -a -L 2  -I "node_modules|.next|.git"
@@ -272,6 +272,7 @@ if (fs.existsSync(envPath)) {
 // -- Next.js 配置
 const nextConfig: NextConfig = {
   /* config options here */
+  reactCompiler: true,
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
@@ -307,9 +308,143 @@ process.env.NEXT_PUBLIC_HOST
 process.env.HOST
 ```
 
-# 规范相关
+# 开发规范
 
-https://biomejs.dev/zh-cn/
+## 代码规范检查与修复 + 代码风格
+
+推荐 [Biome ↪](https://biomejs.dev/zh-cn/)
+
+**Biome** 是用 **Rust** 编写的全能 JavaScript 工具链，其核心理念是 **“One tool to rule them all”**——**一个工具搞定格式化、检查与修复**。相比 Eslint + Prettier，Biome 速度更快，配置更简单，让开发体验更加顺畅。
+
+在初始化项目时，我们已经选择了基于 Biome 来实现代码规范检查与修复和代码风格的控制，接下来我们简单配置。
+
+1、安装 [Biome VS Code 扩展 ↪](https://marketplace.visualstudio.com/items?itemName=biomejs.biome)，快捷键 <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>X</kbd>
+
+2、在VS Code 按快捷键 <kbd>Cmd</kbd> + <kbd>,</kbd> 搜索 Editor: Default Formatter，选择 Biome 作为默认格式化程序
+
+3、搜索 Editor: Format On Save，☑️ 保存时设置文件格式
+
+4、在 package.json 文件中加入如下快捷指令
+
+```
+"lint": "biome check .",
+"lint:fix": "biome check --write .",
+```
+
+## commit 规范检查
+
+推荐使用 **Conventional Commits + Husky + lint-staged + Commitlint** 来 **规范 Git 提交信息**、**自动执行代码质量检查**，以及**优化 Git Hook 执行效率**。
+
+1、安装依赖
+
+```shell
+$ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
+```
+
+2、在 `package.json` 中配置 `lint-staged`：
+
+```json
+"lint-staged": {
+  "*.{js,jsx,ts,tsx}": [
+    "pnpm lint"
+  ]
+},
+```
+
+这样，当你执行 `git commit` 时，`lint-staged` 会自动运行 `pnpm lint` 来检查暂存区中的文件。
+
+3、初始化 husky
+
+```shell
+$ pnpm husky init
+```
+
+这会创建 .husky/ 目录和一个默认的 pre-commit 钩子。
+
+4、配置 pre-commit 钩子，编辑 .husky/pre-commit 文件：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 在提交前执行代码格式化与检查
+pnpm lint-staged
+```
+
+5、新增 commit-msg 钩子，创建 .husky/commit-msg 文件：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm commitlint --edit "$1"
+```
+
+6、新建 commitlint 配置，创建 commitlint.config.js：
+
+```js
+export default {
+  extends: ["@commitlint/config-conventional"],
+  rules: {
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat",      // 新功能
+        "fix",       // 修复 bug
+        "docs",      // 文档更新
+        "style",     // 代码格式（不影响逻辑）
+        "refactor",  // 重构
+        "perf",      // 性能优化
+        "test",      // 测试
+        "build",     // 构建系统或依赖更新
+        "ci",        // CI 配置修改
+        "chore",     // 杂项任务
+        "revert"     // 回滚
+      ]
+    ],
+    "subject-case": [0]
+  }
+}
+```
+
+现在，当你执行 `git commit` 时，`husky` 会自动触发以下钩子：
+
+- **`pre-commit` 钩子**：运行 `lint-staged`，对暂存区的文件进行代码风格检查。
+- **`commit-msg` 钩子**：运行 `commitlint`，检查提交信息是否符合规范。
+
+这样配置后，你的项目将能够在提交时自动进行代码风格和提交信息的检查，确保代码质量和提交信息的规范性。
+
+7、引导式提交（推荐）
+
+让开发者通过交互式命令填写 commit 信息：
+
+```shell
+$ pnpm add -D commitizen cz-conventional-changelog
+```
+
+在 package.json 中添加：
+
+```json
+{
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "scripts": {
+    "commit": "cz"
+  }
+}
+```
+
+然后执行：
+
+```shell
+$ pnpm commit
+```
+
+即可弹出交互式提交界面
 
 # 国际化 next-intl
 
@@ -732,7 +867,69 @@ export default function SwitchLangs() {
 }
 ```
 
+# PWA
+
+@See https://nextjs.org/docs/app/guides/progressive-web-apps
+
+PWA（Progressive Web App，渐进式网页应用）是一种融合了网页与原生应用优点的现代 Web 技术，通过使用 Service Worker、Web App Manifest 等特性，使网站能够离线访问、支持推送通知、具备安装到桌面的能力，并在性能、体验和交互上接近原生 App，同时保持跨平台和易于更新的优势。
+
+## 创建 Web 应用程序清单
+
+Next.js 使用 App Router 内置支持创建 [Web 应用程序清单 ↪](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps/Manifest)。
+
+> `app/manifest.ts`
+
+```ts
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Next.js App",
+    short_name: "Next.js App",
+    description: "Next.js App",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#fff",
+    theme_color: "#fff",
+    icons: [
+      {
+        src: "/favicon.ico",
+        sizes: "any",
+        type: "image/x-icon",
+      },
+    ],
+  };
+}
+```
+
+> **提示**：你可以通过 [网站图标生成器 ↪](https://realfavicongenerator.net/) 生产对应的图标。
+
+## 新建 public/sw.js
+
+```ts
+self.addEventListener("install", () => {
+  // 不缓存内容，只为让浏览器识别为 PWA
+  self.skipWaiting();
+});
+```
+
+## 在 app/layout.tsx 中加入 manifest 引用
 
 
 
+
+
+💡 **Tip**：要测试 PWA 是否生效：
+
+
+
+1. 运行生产环境：
+
+   pnpm build:qa
+
+   pnpm start:qa
+
+1. 浏览器访问 H5 页面，打开 **DevTools → Application → Manifest**
+2. 检查 **“Add to Home Screen”** 提示和图标
+3. 查看 **Service Worker** 是否注册
 
