@@ -2,7 +2,9 @@
 
 # 概述
 
-TanStack Query（前生是 React Query ）是专为 React 应用设计的服务器状态管理库，提供开箱即用的数据获取、缓存和同步功能。
+**TanStack Query** 是一个专门用来在 Web 应用中 **获取、缓存、同步和更新服务器端数据** 的库。它简化了数据获取过程，使开发者能够专注于业务逻辑，而无需处理繁琐的状态管理。它会自动管理数据请求的状态（加载中 / 出错 / 拿到数据）、内置缓存机制，从而减少网络请求、提升应用性能和用户体验。它还支持分页、实时数据等复杂需求，并且能与 React、Vue 等主流框架及 Redux、Zustand 等状态管理库一起使用。
+
+TanStack Query 用 **查询键** (queryKey) 来唯一标识一次数据请求结果，用 **查询函数** (queryFn) 来描述如何从后台接口获取数据。查询绑定这两者，返回 Promise 即可。这样，能以声明式的方式依赖异步数据源，而不是每次都亲自管理一堆状态和逻辑。
 
 > **学习资源**：
 >
@@ -90,33 +92,31 @@ queryClient.invalidateQueries({
 
 # 安装和设置
 
-1）创建项目
+1、创建项目
 
 ```shell
-$ pnpm create vite react-query --template react-ts && code react-query
-$ pnpm install 
-$ pnpm dev
+$ pnpm create vite tanstack-query-demo --template react-ts
 ```
 
-2）安装 React Query
+2、安装 Tanstack Query
 
 ```shell
 $ pnpm add @tanstack/react-query @tanstack/react-query-devtools
 ```
 
 - `@tanstack/react-query`：核心库
-- `@tanstack/react-query-devtools`：调试工具 *（可选）*
+- `@tanstack/react-query-devtools`：调试工具 （可选）
 
-3）配置 Provider
+3、配置 Provider
 
 在应用的入口文件中，创建一个 QueryClient 实例，并使用 QueryClientProvider 将其注入到应用中：
 
 ```tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import App from "./App.tsx";
 
 const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
@@ -124,7 +124,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <App />
       {/* 添加 React Query Devtools */}
-      <ReactQueryDevtools />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>
 );
@@ -197,3 +197,11 @@ function Todos() {
 
 render(<App />, document.getElementById('root'))
 ```
+
+# 电商示例
+
+https://fakestoreapi.com/docs
+
+为了统一管理客户端的 API 请求，我们在 src 目录下创建一个 api/ 文件夹，并在其中添加一个 products.ts 文件。这个文件中包含：分页获取、单个产品获取、所有产品获取和创建产品等逻辑。
+
+https://juejin.cn/post/7501829019407482920#heading-14

@@ -446,7 +446,58 @@ $ pnpm commit
 
 即可弹出交互式提交界面
 
+# 样式
+
+@See https://nextjs.org/docs/app/getting-started/css
+
+选择： [tailwindcss  ↪](https://tailwindcss.com/)
+
+创建项目时，已 ☑️ 启用tailwindcss
+
+这里主要扩展一下有关 tailwindcss 的工具类，新建 `@/lib/class-helpers.ts`
+
+```ts
+/**
+ * TailwindCSS ClassName 工具函数
+ *
+ * 用途：
+ * - cn: 拼接类名并自动合并 Tailwind 冲突类，适合组件中使用。
+ * - clsx: 条件拼接类名，不合并冲突，适合快速临时类名拼接。
+ *
+ * 使用：
+ * import { cn, clsx } from "@/lib/class-helpers";
+ *
+ * 安装依赖：
+ * pnpm add class-variance-authority tailwind-merge
+ *
+ * 参考：
+ * - https://github.com/joe-bell/cva
+ * - https://github.com/dcastil/tailwind-merge
+ */
+
+import { type CxOptions, cx } from "class-variance-authority";
+import { twMerge } from "tailwind-merge";
+
+/** 拼接类名并自动合并 Tailwind 冲突类 */
+export function cn(...inputs: CxOptions) {
+  return twMerge(cx(inputs));
+}
+
+/** 条件拼接类名，不处理冲突 */
+export function clsx(...inputs: CxOptions) {
+  return cx(inputs);
+}
+```
+
+# 获取数据
+
+@See https://nextjs.org/docs/app/getting-started/fetching-data
+
+
+
 # 国际化 next-intl
+
+![](./imgs/i18n-intl.gif)
 
 ## 概述
 
@@ -790,8 +841,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 ```tsx
 "use client";
 
-import SwitchLangs from "@/components/SwitchLangs";
 import { useTranslations } from "next-intl";
+import SwitchLangs from "@/components/features/SwitchLangs";
 
 export default function Page() {
   const t = useTranslations();
@@ -800,20 +851,21 @@ export default function Page() {
   return (
     <div className="flex flex-col items-center gap-4">
       <SwitchLangs />
+      <div className="bg-gray-200 w-full p-4 space-y-2">
+        {/* 1. 没有变量 */}
+        <div>{t("title")}</div>
+        <div>{t("profile.tips")}</div>
 
-      {/* 1. 没有变量 */}
-      <div>{t("title")}</div>
-      <div>{t("profile.tips")}</div>
+        {/* 2. 存在变量（插值） */}
+        <div>{t("profile.reward1", { point })}</div>
 
-      {/* 2. 存在变量（插值） */}
-      <div>{t("profile.reward1", { point })}</div>
-
-      {/* 3. 自定义渲染 */}
-      <div>
-        {t.rich("profile.reward2", {
-          tag: (children) => <span className="text-red-500 font-bold">{children}</span>,
-          point,
-        })}
+        {/* 3. 自定义渲染 */}
+        <div>
+          {t.rich("profile.reward2", {
+            tag: (children) => <span className="text-red-500 font-bold">{children}</span>,
+            point,
+          })}
+        </div>
       </div>
     </div>
   );
@@ -826,42 +878,81 @@ export default function Page() {
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { routing, Locale } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
+import { clsx } from "@/lib/class-helpers";
 
-export default function SwitchLangs() {
+/**
+ * LanguageSwitcher 组件
+ *
+ * 功能：
+ * - 显示可用语言列表，每个按钮带国旗
+ * - 当前选中语言高亮
+ * - 点击按钮切换语言，使用 router.replace 替换当前 URL，不增加历史记录
+ *
+ * 数据依赖：
+ * - routing.locales: 项目支持的语言列表
+ * - routing.defaultLocale: 默认语言
+ *
+ * 用法：
+ * <LanguageSwitcher />
+ *
+ * 备注：
+ * - 使用了 clsx 工具函数来处理 Tailwind 类名动态拼接
+ */
+
+// 语言列表直接包含国旗
+const langs: { code: Locale; label: string }[] = [
+  { code: "zh-CN", label: "🇨🇳 Chinese" },
+  { code: "en-US", label: "🇺🇸 English" },
+  { code: "pt", label: "🇧🇷 Português" },
+  { code: "es", label: "🇪🇸 Español" },
+];
+
+export default function LanguageSwitcher() {
   const router = useRouter();
-  const pathname = usePathname(); // 当前 URL，例如 /en-US/page
+  const pathname = usePathname();
 
-  const langs: { code: Locale; label: string }[] = [
-    { code: "zh-CN", label: "Chinese" },
-    { code: "en-US", label: "English" },
-    { code: "pt", label: "Português" },
-    { code: "es", label: "Español" },
-  ];
+  // 当前语言前缀
+  const currentLang =
+    routing.locales.find((locale) => pathname?.startsWith(`/${locale}`)) ??
+    routing.defaultLocale;
 
+  // 切换语言
   const onSwitchLang = (lang: { code: Locale; label: string }) => {
     const segments = pathname.split("/").filter(Boolean) as Locale[];
 
-    // 判断首段是否为已知 locale
+    // 如果 URL 首段是已知语言，直接替换；否则在前面添加
     if (routing.locales.includes(segments[0])) {
-      segments[0] = lang.code; // 替换现有语言
+      segments[0] = lang.code;
     } else {
-      segments.unshift(lang.code); // 如果没有语言前缀，则添加
+      segments.unshift(lang.code);
     }
 
-    const newPath = "/" + segments.join("/");
-
-    // 使用 replace 替换当前页面，不产生新的浏览历史
-    router.replace(newPath);
+    // 替换当前页面，不增加浏览历史
+    router.replace(`/${segments.join("/")}`);
   };
 
   return (
-    <div className="flex items-center gap-4">
-      {langs.map((lang) => (
-        <button key={lang.code} onClick={() => onSwitchLang(lang)} className="px-2 py-1 border rounded cursor-pointer">
-          {lang.label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      {langs.map((lang) => {
+        const isActive = lang.code === currentLang;
+
+        return (
+          <button
+            key={lang.code}
+            type="button"
+            onClick={() => onSwitchLang(lang)}
+            className={clsx(
+              "px-3 py-1.5 border rounded text-sm transition-colors cursor-pointer",
+              isActive
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100",
+            )}
+          >
+            {lang.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -933,3 +1024,6 @@ self.addEventListener("install", () => {
 2. 检查 **“Add to Home Screen”** 提示和图标
 3. 查看 **Service Worker** 是否注册
 
+# 主题
+
+next-themes

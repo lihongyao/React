@@ -1,4 +1,3 @@
-import React from 
 import { useQuery } from "@tanstack/react-query";
 
 export default function App() {
@@ -12,10 +11,10 @@ export default function App() {
 
   return (
     <div>
-      {data.map((item) => (
+      {data.map((item: { title: string; body: string }) => (
         <div>
-          <div></div>
-          <div></div>
+          <h5>{item.title}</h5>
+          <p>{item.body}</p>
         </div>
       ))}
     </div>
