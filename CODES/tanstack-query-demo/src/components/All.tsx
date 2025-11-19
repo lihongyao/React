@@ -11,18 +11,13 @@ export default function All() {
   if (error instanceof Error) return <div className="text-center py-10 text-red-500">出错了：{error.message}</div>;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
-      {data?.map((product) => (
-        <div key={product.id} className="flex flex-col items-center bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-          <div className="w-full h-48 flex items-center justify-center overflow-hidden rounded-t-2xl bg-gray-50">
-            <img src={product.image} alt={product.title} className="h-full object-contain transform transition-transform duration-300 hover:scale-105" />
-          </div>
-          <div className="w-full p-3 flex flex-col gap-1">
-            <h3 className="text-sm font-medium text-gray-800 line-clamp-1">{product.title}</h3>
-            <p className="text-xs text-gray-500 line-clamp-2">{product.description}</p>
-
-            <div className="mt-2 text-blue-600 font-semibold text-sm">${product.price}</div>
-          </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+      {data?.products.map((p) => (
+        <div key={p.id} className="p-4 border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 bg-white">
+          <img src={p.thumbnail} alt={p.title} className="rounded-lg mb-2 w-full h-32 object-cover" />
+          <div className="text-sm text-gray-800 font-medium line-clamp-2">{p.title}</div>
+          <div className="text-xs text-gray-500 mt-1 line-clamp-2">{p.description}</div>
+          <div className="mt-2 font-semibold text-blue-600">${p.price}</div>
         </div>
       ))}
     </div>

@@ -1,75 +1,112 @@
-const BASE_URL = 'https://fakestoreapi.com/products';
+// api/products.ts
+const BASE_URL = 'https://dummyjson.com/products'
 
-export interface Rating {
-  rate: number;
-  count: number;
-}
 
 export interface Product {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string;
-  rating?: Rating;
+  id: number
+  title: string
+  price: number
+  description: string
+  category: string
+  thumbnail: string 
+  images?: string[]
+  rating?: number
+}
+
+export interface ListResponse {
+  products: Product[]
+  total: number
+  skip: number
+  limit: number
 }
 
 export interface CreateProduct {
-  title: string;
-  price: number;
-  description: string;
-  image: string;
-  category: string;
+  title: string
+  price: number
+  description: string
+  thumbnail?: string
+  category: string
 }
 
-
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * 延迟函数，用于模拟网络耗时
+ */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
  * 通用 fetch JSON 工具函数
  */
-async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, options);
+async function fetchJSON<T>(
+  url: string,
+  options?: RequestInit,
+  delay = 300 // 默认延迟 300ms
+): Promise<T> {
+  if (delay > 0) await sleep(delay)
+
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    ...options,
+  })
+
   if (!res.ok) {
-    throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+    throw new Error(`Request failed: ${res.status} ${res.statusText}`)
   }
-  return res.json() as Promise<T>;
+
+  return res.json() as Promise<T>
 }
 
 /**
- * 获取所有商品
+ * 获取所有商品（仅用于调试）
  */
-export async function getProducts(): Promise<Product[]> {
-  await sleep(1000);
-  return fetchJSON<Product[]>(BASE_URL);
+export async function getProducts(): Promise<ListResponse> {
+  return fetchJSON<ListResponse>(BASE_URL)
 }
 
 /**
  * 获取单个商品
  */
 export async function getProductByID(id: number): Promise<Product> {
-  return fetchJSON<Product>(`${BASE_URL}/${id}`);
+  return fetchJSON<Product>(`${BASE_URL}/${id}`)
 }
 
 /**
- * 分页获取商品
- * 因为产品一共只有 20 条，为了达到多页获取的效果，所以每页最多显示 5 条
+ * 分页获取商品（每页 5 条）
+ * dummyjson 支持 limit & skip 参数
  */
-export async function getProductByPage(page: number): Promise<Product[]> {
-  const limit = 5;
-  if (page > 4) return [];
-  return fetchJSON<Product[]>(`${BASE_URL}?limit=${page * limit}`);
+export async function getProductsByPage(page: number): Promise<ListResponse> {
+  const limit = 5
+  const skip = (page - 1) * limit
+  return fetchJSON<ListResponse>(`${BASE_URL}?limit=${limit}&skip=${skip}`)
 }
 
 /**
  * 创建商品
  */
 export async function createProduct(product: CreateProduct): Promise<Product> {
-  return fetchJSON<Product>(BASE_URL, {
+  return fetchJSON<Product>(BASE_URL + '/add', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
-  });
+  })
+}
+
+/**
+ * 更新商品
+ */
+export async function updateProduct(
+  id: number,
+  product: Partial<CreateProduct>
+): Promise<Product> {
+  return fetchJSON<Product>(`${BASE_URL}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(product),
+  })
+}
+
+/**
+ * 删除商品
+ */
+export async function deleteProduct(id: number): Promise<{ isDeleted: boolean }> {
+  return fetchJSON<{ isDeleted: boolean }>(`${BASE_URL}/${id}`, {
+    method: 'DELETE',
+  })
 }

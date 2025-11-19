@@ -2,7 +2,7 @@
 
 [Next.js ↪](https://nextjs.org/) 是一个基于 React 的全栈框架，用于快速构建高性能的服务器端渲染（SSR）和静态生成（SSG）网页应用。
 
-本文主要记录 Next.js 的学习路程，便于日后回溯，非 官方指南，中文指南请参考 [这里 ↪](https://nextjs.net.cn/)
+本文主要记录 Next.js 的学习路程，便于日后回溯，非官方指南，中文指南请参考 [这里 ↪](https://nextjs.net.cn/)
 
 相关环境：
 
@@ -164,6 +164,8 @@ export default function Dashboard() {
 
 # 创建项目
 
+@See https://nextjs.org/docs/app/getting-started/installation
+
 ```shell
 $ pnpm create next-app@latest nextjs-template [--yes]
 ✔ Would you like to use the recommended Next.js defaults? › No, customize settings
@@ -178,42 +180,115 @@ $ pnpm create next-app@latest nextjs-template [--yes]
 ✔ What import alias would you like configured? … @/*
 ```
 
-> **提示**：`--yes` 会跳过提示，使用已保存的偏好或默认设置。默认配置启用 TypeScript、Tailwind、App Router 和 Turbopack，并设置导入别名 `@/*`。
+> **提示**：`--yes` 会跳过提示，使用已保存的偏好或默认设置。
 
 # 目录结构
 
 @See https://nextjs.org/docs/app/getting-started/project-structure
 
+```
+$ tree -I 'node_modules' -L 3
+.
+├── biome.json
+├── commitlint.config.js
+├── env/
+├── env.d.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.mjs
+├── public                     # 静态文件，如图片、字体、图标等
+│   ├── fonts
+│   ├── images
+│   ├── styles
+│   │   ├── overrides
+│   │   ├── skins
+│   │   └── themes
+│   └── sw.js
+├── README.md
+├── scripts
+│   ├── build-styles
+│   ├── convert-css-vars
+│   └── excel2json
+├── src
+│   ├── api
+│   │   ├── apiConfig
+│   │   └── apiServer
+│   ├── app                    # 使用 App Router 的页面结构 (Next.js 13+)
+│   │   ├── [lang]
+│   │   ├── favicon.ico
+│   │   └── globals.css
+│   ├── components             # 组件
+│   │   ├── features           # 业务组件
+│   │   ├── layout             # 布局组件
+│   │   └── ui                 # 基础组件
+│   ├── configs                # 品牌/项目配置项（非必须，可使用环境变量）
+│   │   └── brands
+│   ├── constants              # 常量定义
+│   ├── hooks                  # 自定义钩子
+│   ├── i18n                   # 国际化i18n next-intl
+│   │   ├── locales
+│   │   ├── navigation.ts
+│   │   ├── request.ts
+│   │   └── routing.ts
+│   ├── libs                   # 工具函数
+│   │   ├── brand.ts
+│   │   └── class-helpers.ts
+│   ├── providers
+│   │   └── brand.provider.tsx # 全局 Provider（如 Context API 或 Redux Provider）
+│   ├── proxy.ts
+│   ├── stores
+│   │   └── globalStore.ts
+│   └── types
+└── tsconfig.json
 
-
-```shell
-$ tree -a -L 2  -I "node_modules|.next|.git"
 ```
 
 # 环境变量
 
-这里以 `dev` `qa` `prod` 为例：
+在多品牌、多环境（如开发、预发布、生产）项目中，合理地组织和加载环境变量，可以让构建与部署更加灵活、稳定。
 
-1、在根目录新建：env.d.ts 类型声明文件
+假设现在有两个品牌：`afun` `bfun`
+
+1、创建相关文件
+
+```shell
+$ mkdir -p env && touch env/.env.{afun,bfun}.{dev,stage,prod} env.d.ts
+```
+
+目录结构如下：
+
+```shell
+$ tree env -a
+env.d.ts
+env
+├── .env.afun.dev
+├── .env.afun.prod
+├── .env.afun.stage
+├── .env.bfun.dev
+├── .env.bfun.prod
+└── .env.bfun.stage
+```
+
+2、类型声明 `env.d.ts`（根目录）
 
 ```ts
 // -- 客户端环境变量
 interface ClientEnv {
-  NEXT_PUBLIC_HOST: string;
-  NEXT_PUBLIC_VERSION: string;
+  NEXT_PUBLIC_API_BASE_URL: string;
+  NEXT_PUBLIC_BRAND_NAME: string;
 }
 
 // -- 服务端环境变量
 interface ServerEnv {
-  HOST: string;
-  VERSION: string;
+  APP_ENV: "dev" | "stage" | "prod";
 }
 
 declare global {
   namespace NodeJS {
     interface ProcessEnv extends ClientEnv, ServerEnv {
-      NODE_ENV: "development" | "production";
-      APP_ENV: "dev" | "qa" | "prod";
+      // ...
     }
   }
 }
@@ -221,106 +296,91 @@ declare global {
 export {};
 ```
 
-> 注意：**客户端可用** 的环境变量必须以 **NEXT_PUBLIC_** 开头，服务端可以使用普通变量（不加 NEXT_PUBLIC_）
+> 注意：
+>
+> - 所有以 NEXT_PUBLIC_ 开头的变量会被 Next.js 暴露到浏览器端。
+> - 其他变量（例如 APP_ENV）仅在服务端可用。
 
-2）创建环境变量文件
+3、示例环境变量文件，以 afun 品牌的开发环境为例：
+
+```ini
+# .env.afun.dev
+APP_ENV=dev
+NEXT_PUBLIC_API_BASE_URL=https://dev.afun.example.com
+NEXT_PUBLIC_BRAND_NAME=afun
+```
+
+> 以 `.env.afun.dev` 为例
+
+4、安装依赖，我们使用 `dotenv` `dotenv-cli` 来加载 .env 文件中的环境变量：
 
 ```shell
-$ touch .env.dev .env.qa .env.prod
+$ pnpm add dotenv dotenv-cli -D
 ```
 
-```
-# .env.dev
-NEXT_PUBLIC_HOST=https://dev.example.com
-NEXT_PUBLIC_VERSION=1
-```
-
-```
-# .env.qa
-NEXT_PUBLIC_HOST=https://qa.example.com
-NEXT_PUBLIC_VERSION=1
-```
-
-```
-# .env.prod
-NEXT_PUBLIC_HOST=https://prod.example.com
-NEXT_PUBLIC_VERSION=1
-```
-
-3、`next.config.js` — 自动加载 `.env.*`
-
-理论上，Next.js 能够识别 NODE_ENV=development | production | test 并加载对应的环境变量文件，但实际的开发场景可能变得复杂，当我们需要适配多环境时，比如 `prod-mx` `prod-br`，简单靠 Next.js 提供的环境变量加载方式就行不通了，此时我们可以依赖 `dotenv` 实现。
-
-```ts
-import type { NextConfig } from "next";
-import fs from "fs";
-import path from "path";
-import dotenv from "dotenv";
-
-// -- 加载环境变量
-const APP_ENV = process.env.APP_ENV || "dev";
-const envFile = `.env.${APP_ENV}`;
-const envPath = path.resolve(process.cwd(), envFile);
-
-if (fs.existsSync(envPath)) {
-  console.log(`👉 Loading environment variables from ${envFile}`);
-  dotenv.config({ path: envPath });
-} else {
-  console.warn(`⚠️ Environment file ${envFile} not found, fallback to defaults`);
-}
-
-// -- Next.js 配置
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-  reactStrictMode: true,
-  poweredByHeader: false,
-  compress: true,
-  trailingSlash: false,
-  images: {
-    remotePatterns: [],
-  },
-};
-
-export default nextConfig;
-```
-
-4、Windows 下直接写 NODE_ENV=qa 可能不生效，需要用 cross-env
-
-```shell
-$ pnpm add -D cross-env
-```
-
-5、在 package.json 的 scripts 里指定 NODE_ENV 和环境文件
+5、配置 `package.json`
 
 ```json
-"dev": "cross-env NODE_ENV=development APP_ENV=dev next dev",
-"dev:qa": "cross-env NODE_ENV=development APP_ENV=qa next dev",
-"dev:prod": "cross-env NODE_ENV=development APP_ENV=prod next dev",
-"build:qa": "cross-env NODE_ENV=production APP_ENV=qa next build",
-"build:prod": "cross-env NODE_ENV=production APP_ENV=prod next build",
+{
+  "scripts": {
+    "dev:afun": "dotenv -e env/.env.afun.dev -- next dev --turbopack",
+    "dev:bfun": "dotenv -e env/.env.bfun.dev -- next dev --turbopack",
+
+    "build:afun-stage": "dotenv -e env/.env.afun.stage -- next build --turbopack",
+    "build:bfun-stage": "dotenv -e env/.env.bfun.stage -- next build --turbopack",
+
+    "build:afun-prod": "dotenv -e env/.env.afun.prod -- next build --turbopack",
+    "build:bfun-prod": "dotenv -e env/.env.bfun.prod -- next build --turbopack"
+  }
+}
 ```
+
+以上指令可以通过变量参数简化：
+
+```json
+{
+  "scripts": {
+    "dev": "dotenv -e env/.env.${app-afun}.dev -- next dev --turbopack",
+    "build": "dotenv -e env/.env.$app.$env -- next build --turbopack",
+  }
+}
+```
+
+执行指令：
+
+```shell
+# 开发环境
+$ app=xxx pnpm dev
+# 预发 & 生产环境
+$ app=xxx env=xxx pnpm build
+
+# eg.1 启动 afun 项目，执行指令：
+$ app=afun pnpm dev
+
+# eg.2 构建 afun 生产环境，执行指令：
+$ app=afun env=prod pnpm build
+```
+
+> 💡 提示：默认为 `afun`，即执行：`pnpm dev`
 
 6、访问环境变量
 
 ```tsx
-process.env.NEXT_PUBLIC_HOST
-process.env.HOST
+process.env.NEXT_PUBLIC_API_BASE_URL  // 浏览器端和服务端均可用
+process.env.APP_ENV                   // 仅服务端可用
 ```
 
 # 开发规范
 
 ## 代码规范检查与修复 + 代码风格
 
-推荐 [Biome ↪](https://biomejs.dev/zh-cn/)
-
-**Biome** 是用 **Rust** 编写的全能 JavaScript 工具链，其核心理念是 **“One tool to rule them all”**——**一个工具搞定格式化、检查与修复**。相比 Eslint + Prettier，Biome 速度更快，配置更简单，让开发体验更加顺畅。
+选择 [Biome ↪](https://biomejs.dev/zh-cn/)
 
 在初始化项目时，我们已经选择了基于 Biome 来实现代码规范检查与修复和代码风格的控制，接下来我们简单配置。
 
 1、安装 [Biome VS Code 扩展 ↪](https://marketplace.visualstudio.com/items?itemName=biomejs.biome)，快捷键 <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>X</kbd>
 
-2、在VS Code 按快捷键 <kbd>Cmd</kbd> + <kbd>,</kbd> 搜索 Editor: Default Formatter，选择 Biome 作为默认格式化程序
+2、快捷键 <kbd>Cmd</kbd> + <kbd>,</kbd> 搜索 Editor: Default Formatter，选择 Biome 作为默认格式化程序
 
 3、搜索 Editor: Format On Save，☑️ 保存时设置文件格式
 
@@ -331,9 +391,44 @@ process.env.HOST
 "lint:fix": "biome check --write .",
 ```
 
-## commit 规范检查
+5、统一风格，项目内配置 `.vscode` 目录
 
-推荐使用 **Conventional Commits + Husky + lint-staged + Commitlint** 来 **规范 Git 提交信息**、**自动执行代码质量检查**，以及**优化 Git Hook 执行效率**。
+```shell
+$ mkdir -p .vscode && touch .vscode/{extensions,settings}.json
+$ tree .vscode -a
+.vscode
+├── extensions.json
+└── settings.json
+```
+
+> `settings.json`
+
+```json
+{
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.formatOnSave": true,
+	"editor.insertSpaces": true,
+	"editor.tabSize": 2,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
+	}
+}
+```
+
+> `extensions.json`
+
+```tsx
+{
+  "recommendations": ["biomejs.biome"]
+}
+```
+
+## Commit 规范检查
+
+推荐：Conventional Commits + Husky + lint-staged + Commitlint
+
+这套组合可以在提交前自动检查代码规范、校验 commit 信息格式，并提供交互式的提交体验。
 
 1、安装依赖
 
@@ -341,7 +436,7 @@ process.env.HOST
 $ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
 ```
 
-2、在 `package.json` 中配置 `lint-staged`：
+2、在 `package.json` 中配置 `lint-staged`
 
 ```json
 "lint-staged": {
@@ -351,7 +446,7 @@ $ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
 },
 ```
 
-这样，当你执行 `git commit` 时，`lint-staged` 会自动运行 `pnpm lint` 来检查暂存区中的文件。
+当你执行 git commit 时，lint-staged 会自动运行 pnpm lint 来检查暂存区的文件，防止格式或语法问题被提交。
 
 3、初始化 husky
 
@@ -359,7 +454,7 @@ $ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
 $ pnpm husky init
 ```
 
-这会创建 .husky/ 目录和一个默认的 pre-commit 钩子。
+这会自动创建 .husky/ 目录和一个默认的 pre-commit 钩子。
 
 4、配置 pre-commit 钩子，编辑 .husky/pre-commit 文件：
 
@@ -371,7 +466,9 @@ $ pnpm husky init
 pnpm lint-staged
 ```
 
-5、新增 commit-msg 钩子，创建 .husky/commit-msg 文件：
+提交前会自动运行 lint-staged，确保提交的代码风格、语法正确。
+
+5、配置 commit-msg 钩子，创建 .husky/commit-msg 文件：
 
 ```bash
 #!/usr/bin/env sh
@@ -380,7 +477,9 @@ pnpm lint-staged
 pnpm commitlint --edit "$1"
 ```
 
-6、新建 commitlint 配置，创建 commitlint.config.js：
+这个钩子会在每次提交时校验你的提交信息是否符合 Conventional Commits 规范。
+
+6、创建 commitlint 配置，在项目根目录新建 `commitlint.config.js`：
 
 ```js
 export default {
@@ -390,17 +489,17 @@ export default {
       2,
       "always",
       [
-        "feat",      // 新功能
-        "fix",       // 修复 bug
-        "docs",      // 文档更新
-        "style",     // 代码格式（不影响逻辑）
-        "refactor",  // 重构
-        "perf",      // 性能优化
-        "test",      // 测试
-        "build",     // 构建系统或依赖更新
-        "ci",        // CI 配置修改
-        "chore",     // 杂项任务
-        "revert"     // 回滚
+        "feat",      // ✨ 新功能
+        "fix",       // 🐛 修复 bug
+        "docs",      // 📝 文档更新
+        "style",     // 💅 代码格式（不影响逻辑）
+        "refactor",  // ♻️ 重构（非新增功能、非修复）
+        "perf",      // ⚡️ 性能优化
+        "test",      // ✅ 测试相关修改
+        "build",     // 🏗️ 构建系统或依赖更新
+        "ci",        // 🤖 CI/CD 配置变更
+        "chore",     // 🔧 杂项任务
+        "revert"     // ⏪ 回滚提交
       ]
     ],
     "subject-case": [0]
@@ -408,22 +507,24 @@ export default {
 }
 ```
 
-现在，当你执行 `git commit` 时，`husky` 会自动触发以下钩子：
+现在，当你执行 git commit 时，Husky 会自动触发以下两个钩子：
 
-- **`pre-commit` 钩子**：运行 `lint-staged`，对暂存区的文件进行代码风格检查。
-- **`commit-msg` 钩子**：运行 `commitlint`，检查提交信息是否符合规范。
+| **阶段** | **钩子名** | **执行内容**                | **目的**                   |
+| -------- | ---------- | --------------------------- | -------------------------- |
+| 提交前   | pre-commit | pnpm lint-staged            | 检查暂存区代码是否符合规范 |
+| 提交时   | commit-msg | pnpm commitlint --edit "$1" | 校验提交信息格式           |
 
-这样配置后，你的项目将能够在提交时自动进行代码风格和提交信息的检查，确保代码质量和提交信息的规范性。
+👉 这样，你的项目会在提交时自动检查代码质量和提交信息规范，确保仓库记录干净、统一、可读。
 
 7、引导式提交（推荐）
 
-让开发者通过交互式命令填写 commit 信息：
+为了让团队成员更方便地书写规范化的 commit message，我们可以使用 **Commitizen** 提供交互式提交体验：
 
 ```shell
 $ pnpm add -D commitizen cz-conventional-changelog
 ```
 
-在 package.json 中添加：
+在 package.json 中添加配置：
 
 ```json
 {
@@ -438,23 +539,29 @@ $ pnpm add -D commitizen cz-conventional-changelog
 }
 ```
 
-然后执行：
+然后执行命令：
 
 ```shell
 $ pnpm commit
 ```
 
-即可弹出交互式提交界面
+系统会弹出一个交互式命令行界面，引导你选择提交类型、填写变更说明。
 
 # 样式
 
 @See https://nextjs.org/docs/app/getting-started/css
 
+## Tailwind CSS
+
 选择： [tailwindcss  ↪](https://tailwindcss.com/)
 
 创建项目时，已 ☑️ 启用tailwindcss
 
-这里主要扩展一下有关 tailwindcss 的工具类，新建 `@/lib/class-helpers.ts`
+tailwindcss 工具，新建 `@/libs/class-helpers.ts`
+
+```shell
+$ pnpm add class-variance-authority tailwind-merge
+```
 
 ```ts
 /**
@@ -489,11 +596,112 @@ export function clsx(...inputs: CxOptions) {
 }
 ```
 
+## 类名排序
+
+tailwindcss 保存时设置类名排序（Biome 目前不支持tailwindcss类名排序，因此需要混合使用 Prettier）
+
+1、安装依赖
+
+```shell
+$ pnpm add -D prettier prettier-plugin-tailwindcss
+```
+
+2、根目录新建 `.prettierrc` 文件
+
+```json
+{
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "jsxSingleQuote": false,
+  "arrowParens": "always",
+  "endOfLine": "lf"
+}
+```
+
+3、`.vscode/settings.json`（Biome + Prettier 联动）
+
+```json
+{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+
+  // TSX 文件使用 Prettier（Tailwind 类名排序）
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
+```
+
 # 获取数据
 
 @See https://nextjs.org/docs/app/getting-started/fetching-data
 
+# 状态管理
 
+1、安装依赖
+
+```shell
+$ pnpm add zustand immer
+```
+
+2、定义 store
+
+```ts
+// src/stores/globalStore.ts
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+
+type GlobalStateProps = {
+  count: number;
+  increment: () => void;
+  decrement: () => void;
+};
+
+export const useGlobalStore = create<GlobalStateProps>()(
+  immer((set) => ({
+    count: 0,
+    increment: () =>
+      set((state) => {
+        state.count += 1;
+      }),
+    decrement: () =>
+      set((state) => {
+        state.count -= 1;
+      }),
+  })),
+);
+```
+
+3、使用示例
+
+```tsx
+// src/app/[lang]/_components/Counter.tsx
+"use client";
+import { useGlobalStore } from "@/stores/globalStore";
+
+export default function Counter() {
+  const { count, increment, decrement } = useGlobalStore((state) => state);
+  return (
+    <div>
+      <div>计数器：{count}</div>
+      <button type="button" onClick={increment}>+1</button>
+      <button type="button" onClick={decrement}>-1</button>
+    </div>
+  )
+}
+
+```
 
 # 国际化 next-intl
 
@@ -505,28 +713,34 @@ export function clsx(...inputs: CxOptions) {
 
 [next-intl ↪](https://next-intl.dev/) 使用 **ICU Message Format** 语法，与 React 组件天然兼容。 支持变量替换、复数、选择分支、HTML 片段等多场景。
 
-## 准备工作
+## 准备
 
 ### 目录结构
 
 ```
-.
-├── messages               (2)
-│   ├── en‑US.json
-│   ├── pt.json
-│   └── zh‑CN.json
-├── next.config.ts         (3)
-├── src
-│   ├── app
-│   │   ├── [locale]
-│   │   │   ├── layout.tsx (8)
-│   │   │   └── page.tsx   (9)
-│   ├── i18n
-│   │   ├── navigation.ts  (6)
-│   │   ├── request.ts     (5)
-│   │   └── routing.ts     (4)
-│   └── proxy.ts					 (7)
-...
+src
+├── next.config.ts                  
+├── app
+│   ├── [lang]
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── features     
+│   │   │   ├── ClientComp.tsx
+│   │   │   └── ServerComp.tsx
+│   │   ├── layout
+│   │   │   └── LanguageSwitcher.tsx
+│   │   └── ui
+├── i18n
+│   ├── locales           # 通过脚本输出 —— pnpm i18n:json
+│   │   ├── en-US.json
+│   │   ├── es.json
+│   │   ├── pt.json
+│   │   └── zh-CN.json
+│   ├── navigation.ts
+│   ├── request.ts
+│   └── routing.ts		 
+└── proxy.ts	
 ```
 
 ### 安装依赖
@@ -535,7 +749,7 @@ export function clsx(...inputs: CxOptions) {
 $ pnpm add next-intl
 ```
 
-### 准备翻译
+### 翻译准备
 
 假设支持 `zh-CN` `en-US` `pt` `es`，传统模式下翻译经由专人维护一个 Excel 表，大致如下：
 
@@ -550,36 +764,33 @@ $ pnpm add next-intl
 
 此时，可以通过脚本工具将 Excel 转成 json，这里给大家简单分享一个可以满足基本需求的脚本。
 
-```
-.
-├── messages
-├── public/
-├── scripts/
-│   └── excel-to-json # Excel → JSON 翻译导出脚本
-│       ├── index.ts  # 执行文件
-│       ├── messages  # 输出
-│       └── translations.xlsx # 翻译源
-├── src/
-└── ...
+```shell
+$ tree scripts
+scripts
+└── excel2json
+    ├── index.ts          # 执行文件
+    └── translations.xlsx # 翻译源文件
 ```
 
-> `excel-to-json/index.ts`
+> `index.ts`
 
 ```ts
 /**
+ * src/scripts/excel2json/index.ts
  * Excel → JSON 翻译导出脚本
- * 安装依赖：pnpm add -D xlsx fs path
+ * 安装依赖：pnpm add -D xlsx fs path tsx
  */
 
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import XLSX from "xlsx";
 
 // === 1. 可配置变量 ===
 const EXCEL_FILE_NAME = "translations.xlsx";
 const SHEET_NAME = "Sheet1";
-const INPUT_DIR = path.resolve(__dirname);
-const OUTPUT_DIR = path.join(INPUT_DIR, "messages");
+const ROOT = path.resolve(__dirname, "../../");
+const INPUT_DIR = path.join(ROOT, "/scripts/excel2json");
+const OUTPUT_DIR = path.join(ROOT, "/src/i18n/locales");
 
 // === 2. 类型定义 ===
 interface ExcelRow {
@@ -600,7 +811,9 @@ const excelPath = path.join(INPUT_DIR, EXCEL_FILE_NAME);
 console.log(`📂 读取 Excel 文件: ${excelPath}`);
 
 const workbook = XLSX.readFile(excelPath);
-const sheet = SHEET_NAME ? workbook.Sheets[SHEET_NAME] : workbook.Sheets[workbook.SheetNames[0]];
+const sheet = SHEET_NAME
+  ? workbook.Sheets[SHEET_NAME]
+  : workbook.Sheets[workbook.SheetNames[0]];
 
 if (!sheet) throw new Error(`❌ 找不到 Excel sheet: ${SHEET_NAME}`);
 console.log(`📄 使用 Sheet: ${SHEET_NAME || workbook.SheetNames[0]}`);
@@ -609,7 +822,9 @@ const rawData: ExcelRow[] = XLSX.utils.sheet_to_json(sheet);
 console.log(`🔑 Excel 共读取 ${rawData.length} 条记录`);
 
 // === 4. 获取语言列 ===
-const header: string[] = Object.keys(rawData[0] || {}).filter((key) => key !== "key" && key !== "remark");
+const header: string[] = Object.keys(rawData[0] || {}).filter(
+  (key) => key !== "key" && key !== "remark",
+);
 console.log(`🌐 发现语言列: ${header.join(", ")}`);
 
 // === 5. 递归写入对象属性 ===
@@ -655,28 +870,25 @@ if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 header.forEach((lang) => {
   const filePath = path.join(OUTPUT_DIR, `${lang}.json`);
   fs.writeFileSync(filePath, JSON.stringify(result[lang], null, 2), "utf8");
-  console.log(`✅ [${lang}] 文件生成: ${filePath}，共 ${langCounts[lang]} 条有效翻译`);
+  console.log(
+    `✅ [${lang}] 文件生成: ${filePath}，共 ${langCounts[lang]} 条有效翻译`,
+  );
 });
 
 console.log(`🎉 转换完成！共生成 ${header.length} 个语言文件`);
 console.log(`📂 输出目录: ${OUTPUT_DIR}`);
-```
-
-解析来，我们安装 npx：
-
-```shell
-$ npm add -D npx
-```
-
-然后添加一行 scripts 命令：
 
 ```
-"i18n:json": "tsx ./scripts/excel-to-json/index.ts",
+
+添加 scripts 命令：
+
+```json
+{
+	"i18n:json": "tsx scripts/excel2json/index.ts"
+}
 ```
 
-接下来，执行脚本命令：`pnnpm i18n:json` 即可生成对应的语言 json 文件，最后我们只需要将 message 拖到外层即可。
-
-> 🤔 大家可能会有疑问，为什么不直接将生成的文件放置在根目录呢？其实我的考虑很简单，就是有时可能我只是想单纯的使用这个工具生成json，方便在其他地方使用，而不是真正想要去更新翻译。
+执行脚本命令：`pnnpm i18n:json` 即可生成对应的语言 json 文件 — `src/i18n/locales/...`
 
 ## 实现
 
@@ -686,9 +898,9 @@ $ npm add -D npx
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-// -- Next.js 配置
 const nextConfig: NextConfig = {
   /* config options here */
+  reactCompiler: true,
 };
 
 const withNextIntl = createNextIntlPlugin();
@@ -719,7 +931,7 @@ export const defaultLocale = "zh-CN";
 export const routing = defineRouting({
   locales,
   defaultLocale,
-  localePrefix: "as-needed", //  默认语言不显示前缀，其他语言显示
+  localePrefix: "as-needed",
 });
 ```
 
@@ -750,12 +962,12 @@ export const config = {
 > `i18n/navigation.ts`
 
 ```ts
-import {createNavigation} from 'next-intl/navigation';
-import {routing} from './routing';
- 
+import { createNavigation } from "next-intl/navigation";
+import { routing } from "./routing";
+
 // Lightweight wrappers around Next.js' navigation
 // APIs that consider the routing configuration
-export const {Link, redirect, usePathname, useRouter, getPathname} = createNavigation(routing);
+export const { Link, redirect, usePathname, useRouter, getPathname } = createNavigation(routing);
 ```
 
 5、请求配置
@@ -763,18 +975,20 @@ export const {Link, redirect, usePathname, useRouter, getPathname} = createNavig
 > `i18n/request.ts`
 
 ```ts
-import { getRequestConfig } from "next-intl/server";
 import { hasLocale } from "next-intl";
+import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // Typically corresponds to the `[locale]` segment
   const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+  const locale = hasLocale(routing.locales, requested)
+    ? requested
+    : routing.defaultLocale;
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: (await import(`./locales/${locale}.json`)).default,
   };
 });
 ```
@@ -790,22 +1004,20 @@ src
         └── ...
 ```
 
-> `src/[locale]/layout.tsx`
+> `src/[lang]/layout.tsx`
 
 ```tsx
-import { NextIntlClientProvider, hasLocale } from "next-intl";
+import "@/app/globals.css";
 import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 
 type Props = {
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 };
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { lang } = await params;
@@ -836,22 +1048,41 @@ export default async function LocaleLayout({ children, params }: Props) {
 
 7、使用翻译
 
-> `app/[lang]/page.tsx`
+>  `app/[lang]/page.tsx` 
 
 ```tsx
-"use client";
-
-import { useTranslations } from "next-intl";
-import SwitchLangs from "@/components/features/SwitchLangs";
+import ClientComp from "@/components/features/ClientComp";
+import LanguageSwitcher from "@/components/features/LanguageSwitcher";
+import ServerComp from "@/components/features/ServerComp";
 
 export default function Page() {
+  return (
+    <div className="p-4 flex flex-col items-center gap-4">
+    <LanguageSwitcher />
+     <div className="flex gap-4 items-start">
+       <ClientComp />
+       <ServerComp />
+     </div>
+    </div>
+  );
+}
+```
+
+> 客户端组件
+
+```tsx
+// src/components/features/ClientComp.tsx
+"use client";
+import { useTranslations } from "next-intl";
+
+export default function ClientComp() {
   const t = useTranslations();
   const point = 6000;
-
   return (
-    <div className="flex flex-col items-center gap-4">
-      <SwitchLangs />
-      <div className="bg-gray-200 w-full p-4 space-y-2">
+    <div className="w-full flex flex-col items-center gap-4">
+      <div>客户端组件</div>
+      <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
+      <div className="bg-gray-200 w-full p-4 space-y-2 text-black">
         {/* 1. 没有变量 */}
         <div>{t("title")}</div>
         <div>{t("profile.tips")}</div>
@@ -862,7 +1093,46 @@ export default function Page() {
         {/* 3. 自定义渲染 */}
         <div>
           {t.rich("profile.reward2", {
-            tag: (children) => <span className="text-red-500 font-bold">{children}</span>,
+            tag: (children) => (
+              <span className="text-red-500 font-bold">{children}</span>
+            ),
+            point,
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+> 服务端组件
+
+```tsx
+// src/components/features/ServerComp.tsx
+import { getTranslations } from "next-intl/server";
+
+export default async function ServerComp() {
+  const t = await getTranslations();
+  const point = 6000;
+  return (
+    <div className="w-full flex flex-col items-center gap-4">
+      <div>服务端组件</div>
+      <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
+      <div className="bg-gray-200 w-full p-4 space-y-2 text-black">
+        {/* 1. 没有变量 */}
+        <div>{t("title")}</div>
+        <div>{t("profile.tips")}</div>
+
+        {/* 2. 存在变量（插值） */}
+        <div>{t("profile.reward1", { point })}</div>
+
+        {/* 3. 自定义渲染 */}
+        <div>
+          {t.rich("profile.reward2", {
+            tag: (children) => (
+              <span className="text-red-500 font-bold">{children}</span>
+            ),
             point,
           })}
         </div>
@@ -875,6 +1145,7 @@ export default function Page() {
 8、切换语言
 
 ```tsx
+// src/components/features/LanguageSwitcher.tsx
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
@@ -1006,13 +1277,7 @@ self.addEventListener("install", () => {
 
 ## 在 app/layout.tsx 中加入 manifest 引用
 
-
-
-
-
 💡 **Tip**：要测试 PWA 是否生效：
-
-
 
 1. 运行生产环境：
 
@@ -1024,6 +1289,6 @@ self.addEventListener("install", () => {
 2. 检查 **“Add to Home Screen”** 提示和图标
 3. 查看 **Service Worker** 是否注册
 
-# 主题
+# 多主题多皮肤
 
-next-themes
+参考阅读：

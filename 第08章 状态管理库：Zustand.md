@@ -137,7 +137,7 @@ src/
 
 Zustand 在基础用法之上提供了许多高级特性。
 
-## 深层嵌套状态
+## 深层嵌套状态 - immer
 
 假设状态对象结构如下：
 
@@ -174,33 +174,34 @@ increment: () =>
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-type State = {
-  deep: {
-    tips: string;
-    nested: {
-      obj: { count: number };
-    };
-  };
+export type NestedState = {
+	deep: {
+		tips: string;
+		nested: {
+			obj: { count: number };
+		};
+	};
 };
-
-type Action = {
-  increment: () => void;
+export type NestedActions = {
+	increment: () => void;
 };
+export type NestedStore = NestedState & NestedActions;
 
-export const useNestedStore = create<State & Action>()(
-  immer((set) => ({
-    deep: {
-      tips: "Only update the necessary parts to avoid unnecessary re‑renders.",
-      nested: {
-        obj: { count: 0 },
-      },
-    },
-    increment: () =>
-      set((state) => {
-        state.deep.nested.obj.count++;
-      }),
-  }))
+export const useNestedStore = create(
+	immer<NestedStore>((set) => ({
+		deep: {
+			tips: "Only update the necessary parts to avoid unnecessary re‑renders.",
+			nested: {
+				obj: { count: 0 },
+			},
+		},
+		increment: () =>
+			set((state) => {
+				state.deep.nested.obj.count++;
+			}),
+	})),
 );
+
 ```
 
 > 说明：当你已安装 immer 时，Zustand 的 immer 中间件允许你在更新函数内用可变写法，内部自动转化为不可变修改。

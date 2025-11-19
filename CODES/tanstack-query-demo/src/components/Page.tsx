@@ -1,63 +1,38 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Product, ListResponse, getProductsByPage } from "../api/products";
 
-/** 数据类型 */
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  thumbnail: string;
-}
-
-/** 服务端分页返回结构（单页） */
-interface ProductResponse {
-  products: Product[];
-  total: number;
-  skip: number;
-  limit: number;
-}
-
-/** pageParam 的形状 */
 interface PageParam {
-  skip: number;
-  limit: number;
-}
-
-/** 获取分页数据函数 */
-async function getProducts({ skip = 0, limit = 10, keyword = "" }: { skip?: number; limit?: number; keyword?: string }): Promise<ProductResponse> {
-  const q = keyword ? `&q=${encodeURIComponent(keyword)}` : "";
-  const res = await fetch(`https://dummyjson.com/products/search?limit=${limit}&skip=${skip}${q}`);
-  if (!res.ok) throw new Error("加载失败");
-  return res.json();
+  page: number;
 }
 
 export default function ProductList() {
   const [keyword, setKeyword] = useState("");
+  const [searchKey, setSearchKey] = useState("");
 
-  const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["products", keyword],
-    /**
-     * 这里必须显式写明参数类型，否则 React Query 泛型无法对齐
-     */
-    queryFn: async ({ pageParam = { skip: 0, limit: 20 }, queryKey }: { pageParam?: PageParam; queryKey: [string, string] }): Promise<ProductResponse> => {
-      const [, key] = queryKey;
-      return getProducts({ ...pageParam, keyword: key });
+  // debounce 搜索关键字
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchKey(keyword), 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<ListResponse, Error>({
+    queryKey: ["products", searchKey],
+    queryFn: async ({ pageParam = { page: 1 } }) => {
+      // 调用 api/products.ts 中封装的分页函数
+      return getProductsByPage(pageParam.page);
     },
-    /**
-     * 返回下一个 pageParam，如果 undefined 则停止
-     */
-    getNextPageParam: (lastPage: ProductResponse, allPages: ProductResponse[]): PageParam | undefined => {
-      console.log(allPages);
-      const nextSkip = lastPage.skip + lastPage.limit;
-      return nextSkip >= lastPage.total ? undefined : { skip: nextSkip, limit: lastPage.limit };
+    getNextPageParam: (lastPage) => {
+      const nextPage = lastPage.skip / lastPage.limit + 2; // 下一页
+      return nextPage > Math.ceil(lastPage.total / lastPage.limit) ? undefined : { page: nextPage };
     },
+    keepPreviousData: true,
   });
 
-  // 平铺所有页
   const products: Product[] = data?.pages.flatMap((p) => p.products) ?? [];
 
   if (isLoading) return <div className="text-center py-10 text-gray-500">加载中...</div>;
+
   if (error) return <div className="text-center py-10 text-red-500">出错了：{error.message}</div>;
 
   return (
@@ -69,11 +44,11 @@ export default function ProductList() {
           placeholder="搜索商品..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
       </div>
 
-      {/* 列表 */}
+      {/* 商品列表网格 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
         {products.map((p) => (
           <div key={p.id} className="p-4 border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 bg-white">
@@ -85,7 +60,7 @@ export default function ProductList() {
         ))}
       </div>
 
-      {/* 加载更多 */}
+      {/* 加载更多按钮 */}
       <div className="mt-8">
         {hasNextPage ? (
           <button
