@@ -217,8 +217,17 @@ $ tree -I 'node_modules' -L 3
 │   │   └── apiServer
 │   ├── app                    # 使用 App Router 的页面结构 (Next.js 13+)
 │   │   ├── [lang]
+│   │   │   ├── (app)          # 需要主题布局的路由组
+│   │   │   │   ├── (home)     # 首页
+│   │   │   │   └── others...  # 其他页面
+│   │   │   ├── (modals)       # 路由弹框
+│   │   │   ├── (standalone)   # 无需主题布局的路由组
+│   │   │   │   └── xxx  
+│   │   │   └── not-found.tsx  # 多语言路由组 404
 │   │   ├── favicon.ico
-│   │   └── globals.css
+│   │   ├── layout.tsx         # 应用根布局
+│   │   ├── page.tsx
+│   │   └── not-found.tsx      # 全局404
 │   ├── components             # 组件
 │   │   ├── features           # 业务组件
 │   │   ├── layout             # 布局组件
@@ -242,7 +251,6 @@ $ tree -I 'node_modules' -L 3
 │   │   └── globalStore.ts
 │   └── types
 └── tsconfig.json
-
 ```
 
 # 环境变量
@@ -710,6 +718,8 @@ export default function Counter() {
 ## 概述
 
 @See https://nextjs.org/docs/app/guides/internationalization
+
+@See https://github.com/amannn/next-intl/tree/main/examples/example-app-router
 
 [next-intl ↪](https://next-intl.dev/) 使用 **ICU Message Format** 语法，与 React 组件天然兼容。 支持变量替换、复数、选择分支、HTML 片段等多场景。
 
@@ -1229,6 +1239,10 @@ export default function LanguageSwitcher() {
 }
 ```
 
+## 扩展
+
+关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪]( https://github.com/amannn/next-intl/discussions/329)
+
 # PWA
 
 @See https://nextjs.org/docs/app/guides/progressive-web-apps
@@ -1292,3 +1306,61 @@ self.addEventListener("install", () => {
 # 多主题多皮肤
 
 参考阅读：
+
+# 集成 shadcn-ui
+
+参考 [这里 ↪](https://ui.shadcn.com/docs/installation/next/)
+
+> 💣 **注意**：初始化时会在 @/lib/utils.ts 创建工具函数文件。如果本地已有同名文件，建议提前重命名（如 helpers.ts），以免被覆盖。
+
+## 初始化项目配置
+
+执行：
+
+```shell
+$ pnpm dlx shadcn@latest init
+```
+
+主要操作：
+
+1. 检测项目环境 ✅
+2. 生成 Base Color 配置 ✅
+3. 创建 components.json ✅
+4. 更新 globals.css 的 CSS 变量 ✅
+5. 安装依赖 ✅
+6. 创建基础工具函数文件 utils.ts ✅
+
+> 💡 提示：想更改组件生成路径，可在 components.json 的 aliases 中修改。
+
+## 安装组件
+
+例如安装 [Dialog ↪](https://ui.shadcn.com/docs/components/dialog)：
+
+```shell
+$ pnpm dlx shadcn@latest add dialog
+```
+
+默认会生成：
+
+```
+src/components/ui/dialog.tsx
+```
+
+你可以根据项目习惯重命名或调整结构：
+
+```
+src/components/ui/Dialog.tsx
+```
+
+或
+
+```
+src/components/ui/Dialog/index.tsx
+```
+
+> 建议：为了统一导入路径，可在 index.tsx 中做一次 re-export，例如：
+
+```ts
+export { Dialog } from './DialogComponentFile';
+```
+
