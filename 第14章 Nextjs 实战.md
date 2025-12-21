@@ -255,11 +255,11 @@ $ tree -I 'node_modules' -L 3
 
 # 环境变量
 
-在多品牌、多环境（如开发、预发布、生产）项目中，合理地组织和加载环境变量，可以让构建与部署更加灵活、稳定。
+在多品牌（如 afun、bfun）以及多环境（开发 / 预发布 / 生产）的项目中，**合理地组织和加载环境变量**，可以让本地开发、构建和部署更加清晰、灵活且稳定。
 
-假设现在有两个品牌：`afun` `bfun`
+1️⃣ **文件设计**
 
-1、创建相关文件
+创建环境变量目录与文件
 
 ```shell
 $ mkdir -p env && touch env/.env.{afun,bfun}.{dev,stage,prod} env.d.ts
@@ -279,54 +279,64 @@ env
 └── .env.bfun.stage
 ```
 
-2、类型声明 `env.d.ts`（根目录）
+命名规则说明：
+
+```
+.env.{brand}.{env}
+```
+
+- `brand`：品牌标识（如 `afun`、`bfun`）
+- `env`：运行环境（`dev` / `stage` / `prod`）
+
+2️⃣ **类型声明**
+
+在**项目根目录**添加 env.d.ts：
 
 ```ts
 // -- 客户端环境变量
-interface ClientEnv {
+type ClientEnv = {
+  NEXT_PUBLIC_ENV: string;
   NEXT_PUBLIC_API_BASE_URL: string;
-  NEXT_PUBLIC_BRAND_NAME: string;
+  NEXT_PUBLIC_BRAND: string;
 }
 
 // -- 服务端环境变量
-interface ServerEnv {
-  APP_ENV: "dev" | "stage" | "prod";
-}
+type ServerEnv = {
+  [__key: string]: unknown;
+};
 
 declare global {
   namespace NodeJS {
-    interface ProcessEnv extends ClientEnv, ServerEnv {
-      // ...
-    }
+    interface ProcessEnv extends ClientEnv, ServerEnv {}
   }
 }
 
 export {};
 ```
 
-> 注意：
+> 注意：所有以 NEXT_PUBLIC_ 开头的变量会被 Next.js 暴露到浏览器端。
 >
-> - 所有以 NEXT_PUBLIC_ 开头的变量会被 Next.js 暴露到浏览器端。
-> - 其他变量（例如 APP_ENV）仅在服务端可用。
 
-3、示例环境变量文件，以 afun 品牌的开发环境为例：
+3️⃣ **文件示例**
+
+以 afun 品牌的 **开发环境** 为例：
 
 ```ini
 # .env.afun.dev
-APP_ENV=dev
+NEXT_PUBLIC_ENV=dev
 NEXT_PUBLIC_API_BASE_URL=https://dev.afun.example.com
 NEXT_PUBLIC_BRAND_NAME=afun
 ```
 
-> 以 `.env.afun.dev` 为例
+4️⃣ **安装依赖**
 
-4、安装依赖，我们使用 `dotenv` `dotenv-cli` 来加载 .env 文件中的环境变量：
+使用 dotenv + dotenv-cli 加载环境变量，cross-env 解决跨平台兼容问题：
 
 ```shell
-$ pnpm add dotenv dotenv-cli -D
+$ pnpm add cross-env dotenv dotenv-cli --save-dev
 ```
 
-5、配置 `package.json`
+5️⃣ **脚本配置（基础）**
 
 ```json
 {
@@ -343,39 +353,69 @@ $ pnpm add dotenv dotenv-cli -D
 }
 ```
 
-以上指令可以通过变量参数简化：
+该方式**直观但略显冗余**，当品牌或环境增多时不易维护。
+
+6️⃣ **脚本参数化（推荐）**
+
+通过变量参数统一脚本：
 
 ```json
 {
   "scripts": {
-    "dev": "dotenv -e env/.env.${app-afun}.dev -- next dev --turbopack",
-    "build": "dotenv -e env/.env.$app.$env -- next build --turbopack",
+    "dev": "cross-env dotenv -e env/.env.${app-afun}.dev -- next dev --turbopack",
+		"build": "cross-env dotenv -e env/.env.$app.$env -- next build --turbopack",
   }
 }
 ```
 
-执行指令：
+使用方式：
 
 ```shell
-# 开发环境
-$ app=xxx pnpm dev
-# 预发 & 生产环境
-$ app=xxx env=xxx pnpm build
+# 开发环境（默认 afun）
+$ pnpm dev
 
-# eg.1 启动 afun 项目，执行指令：
+# 指定品牌开发
 $ app=afun pnpm dev
 
-# eg.2 构建 afun 生产环境，执行指令：
-$ app=afun env=prod pnpm build
+# 构建预发布 / 生产环境
+$ app=afun env=stage pnpm build
+$ app=afun env=prod  pnpm build
 ```
 
-> 💡 提示：默认为 `afun`，即执行：`pnpm dev`
-
-6、访问环境变量
+7️⃣ **访问环境变量**
 
 ```tsx
-process.env.NEXT_PUBLIC_API_BASE_URL  // 浏览器端和服务端均可用
-process.env.APP_ENV                   // 仅服务端可用
+// 浏览器端 & 服务端
+process.env.NEXT_PUBLIC_API_BASE_URL
+
+// 仅服务端可用
+process.env.APP_ENV
+```
+
+> 提示：Next.js 会在构建阶段将 NEXT_PUBLIC_ 变量内联到客户端代码中。
+
+8️⃣ **构建前扩展（prebuild）**
+
+如果在构建前需要执行脚本（例如根据品牌动态生成样式文件），可以利用 prebuild 钩子：
+```json
+{
+	  "predev": "cross-env dotenv -e env/.env.${app-afun}.dev -- tsx scripts/gen-brand-css/index.ts",
+		"prebuild": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/gen-brand-css/index.ts",
+}
+```
+
+执行：
+
+```shell
+$ app=afun env=dev pnpm build
+```
+
+在 build 执行前，将自动运行 prebuild，并且在脚本中可以直接访问：
+
+```
+process.env.app
+process.env.env
+process.env.NEXT_PUBLIC_BRAND
 ```
 
 # 开发规范
@@ -1241,7 +1281,21 @@ export default function LanguageSwitcher() {
 
 ## 扩展
 
-关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪]( https://github.com/amannn/next-intl/discussions/329)
+1. 关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪]( https://github.com/amannn/next-intl/discussions/329)
+
+2. VS Code  插件扩展：[i18n Ally ↪](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally)，配置如下：
+
+   ```json
+   // i18n-ally 配置
+   "i18n-ally.sourceLanguage": "en",
+   "i18n-ally.displayLanguage": "zh-CN",
+   "i18n-ally.localesPaths": ["src/i18n/locales"],
+   "i18n-ally.pathMatcher": "{locale}.json",
+   "i18n-ally.enabledFrameworks": ["next-intl", "general"],
+   "i18n-ally.keystyle": "nested"
+   ```
+
+   
 
 # PWA
 
