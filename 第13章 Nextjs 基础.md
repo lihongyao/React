@@ -4,7 +4,7 @@ https://mp.weixin.qq.com/s/x_oTytXbYLsj5bheUrulHQ
 
 # 概述
 
-[Next.js ↪](https://nextjs.org/) 是一个基于 React 的全栈框架，用于快速构建高性能的服务器端渲染（SSR）和静态生成（SSG）网页应用。
+[Next.js ↪](https://nextjscn.org/) 是一个基于 React 的全栈框架，用于快速构建高性能的服务器端渲染（SSR）和静态生成（SSG）网页应用。
 
 本文主要记录 Next.js 的学习路程，便于日后回溯，非官方指南，中文指南请参考 [这里 ↪](https://nextjs.net.cn/)。
 
