@@ -15,6 +15,157 @@ https://mp.weixin.qq.com/s/x_oTytXbYLsj5bheUrulHQ
 > 3. 图标库：[heroicons ↪](https://heroicons.com/)
 > 4. 组件库：[tailwind ui ↪](https://tailwindui.com/components)
 
+## SSR / ISR / SSG / CSR
+
+这四个渲染模式是理解 Next.js、现代前端架构和性能优化 的核心概念。
+
+### SSR
+
+Server-Side Rendering（服务器端渲染）
+
+**原理：**
+
+- 每次用户访问页面时，服务器都会执行 React 代码，然后生成 HTML 返回浏览器。
+- 浏览器接收后再进行水合（hydrate）→ 变成交互页面。
+
+```mermaid
+graph LR
+A[用户请求页面] --> B[服务器运行 React 组件]
+B --> C[返回 HTML]
+C --> D[浏览器渲染 + hydrate]
+```
+
+**特点：**
+
+- 每次请求都是真实渲染 → 数据最新。
+- 首屏快，SEO 友好，但服务器压力较大。
+
+```tsx
+export const dynamic = "force-dynamic"; // 强制 SSR
+
+export default async function Page() {
+  const res = await fetch("https://api.example.com/data", { cache: "no-store" });
+  const data = await res.json();
+  return <div>{data.title}</div>;
+}
+```
+
+**适用场景：**需要实时数据的页面（如用户中心、订单详情、新闻实时榜单）。
+
+### ISR
+
+Incremental Static Regeneration（增量静态再生成）
+
+**原理：**
+
+- 首次访问时生成静态 HTML
+- 缓存到 CDN
+- 后续请求命中缓存
+- 一段时间后缓存过期，下一次请求触发再生成
+
+```mermaid
+graph LR
+A[首次访问] --> B[SSR 渲染并缓存]
+B --> C[后续访问命中缓存]
+C --> D[缓存过期时后台静默再生成]
+```
+
+**特点：**
+
+- 首屏性能接近静态
+- 数据可定期更新
+- 对服务器压力低
+
+```tsx
+export const revalidate = 60; // 每 60 秒再生成一次页面
+
+export default async function Page() {
+  const res = await fetch("https://api.example.com/posts");
+  const posts = await res.json();
+  return <PostList posts={posts} />;
+}
+```
+
+**适用场景**：内容经常变但不需实时（如首页、产品列表、博客文章页）。
+
+### SSG
+
+Static Site Generation（静态生成）
+
+**原理：**
+
+- 在 **构建时** 就生成所有页面的 HTML
+- 部署后直接走 CDN 静态文件
+
+```mermaid
+graph LR
+A[构建阶段] --> B[生成 HTML 文件]
+B --> C[部署到 CDN]
+C --> D[用户访问时直接命中静态文件]
+```
+
+**特点：**访问极快，几乎无服务器负担，但内容固定（除非重新部署）。
+
+```tsx
+export const dynamic = "force-static"; // 强制 SSG
+
+export async function generateStaticParams() {
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+  return posts.map((p) => ({ slug: p.slug }));
+}
+
+export default function Post({ params }) {
+  // 所有静态页面在构建时生成
+}
+```
+
+**适用场景**：几乎不变化的页面（如博客、产品文档、Landing Page）
+
+### CSR
+
+Client-Side Rendering（客户端渲染）
+
+**原理：**
+
+- 首屏返回一个空的 HTML + JS；
+- 浏览器加载 JS 后，自己 fetch 数据并渲染页面。
+
+```mermaid
+graph LR
+A[浏览器请求页面] --> B[返回空 HTML + JS]
+B --> C[客户端 fetch 数据]
+C --> D[React 渲染 DOM]
+```
+
+**特点：**完全在浏览器端渲染，不适合 SEO，但最灵活，适合复杂交互。
+
+```tsx
+"use client";
+import { useEffect, useState } from "react";
+
+export default function Dashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/user").then(res => res.json()).then(setData);
+  }, []);
+
+  return <div>{data ? data.name : "Loading..."}</div>;
+}
+```
+
+**适用场景**：后台管理系统、可视化界面、登录后交互页面、控制台、表单页面等。
+
+总结一句话：
+
+1、**SSR**：实时渲染，适合频繁变动内容
+
+2、**ISR**：准实时渲染，兼顾性能与动态
+
+3、**SSG**：构建时生成，性能最强但静态
+
+4、**CSR**：客户端渲染，适合登录后复杂交互
+
 # 准备工作
 
 开发相关环境：

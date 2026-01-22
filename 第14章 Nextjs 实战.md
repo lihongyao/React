@@ -1,166 +1,14 @@
 # 概述
 
-[Next.js ↪](https://nextjs.org/) 是一个基于 React 的全栈框架，用于快速构建高性能的服务器端渲染（SSR）和静态生成（SSG）网页应用。
-
-本文主要记录 Next.js 的学习路程，便于日后回溯，非官方指南，中文指南请参考 [这里 ↪](https://nextjs.net.cn/)
+本文旨在记录基于 Next.js 搭建项目的过程。
 
 相关环境：
 
+```
 - Node.js：v25.1.0
-- pnpm：v10.20.0
-- Next.js：v16
-- 路由模式：App Router
-
-## SSR / ISR / SSG / CSR
-
-这四个渲染模式是理解 Next.js、现代前端架构和性能优化 的核心概念。
-
-### SSR
-
-Server-Side Rendering（服务器端渲染）
-
-**原理：**
-
-- 每次用户访问页面时，服务器都会执行 React 代码，然后生成 HTML 返回浏览器。
-- 浏览器接收后再进行水合（hydrate）→ 变成交互页面。
-
-```mermaid
-graph LR
-A[用户请求页面] --> B[服务器运行 React 组件]
-B --> C[返回 HTML]
-C --> D[浏览器渲染 + hydrate]
+- pnpm：v10.28.1
+- Next.js：v16 + App Router
 ```
-
-**特点：**
-
-- 每次请求都是真实渲染 → 数据最新。
-- 首屏快，SEO 友好，但服务器压力较大。
-
-```tsx
-export const dynamic = "force-dynamic"; // 强制 SSR
-
-export default async function Page() {
-  const res = await fetch("https://api.example.com/data", { cache: "no-store" });
-  const data = await res.json();
-  return <div>{data.title}</div>;
-}
-```
-
-**适用场景：**需要实时数据的页面（如用户中心、订单详情、新闻实时榜单）。
-
-### ISR
-
-Incremental Static Regeneration（增量静态再生成）
-
-**原理：**
-
-- 首次访问时生成静态 HTML
-- 缓存到 CDN
-- 后续请求命中缓存
-- 一段时间后缓存过期，下一次请求触发再生成
-
-```mermaid
-graph LR
-A[首次访问] --> B[SSR 渲染并缓存]
-B --> C[后续访问命中缓存]
-C --> D[缓存过期时后台静默再生成]
-```
-
-**特点：**
-
-- 首屏性能接近静态
-- 数据可定期更新
-- 对服务器压力低
-
-```tsx
-export const revalidate = 60; // 每 60 秒再生成一次页面
-
-export default async function Page() {
-  const res = await fetch("https://api.example.com/posts");
-  const posts = await res.json();
-  return <PostList posts={posts} />;
-}
-```
-
-**适用场景**：内容经常变但不需实时（如首页、产品列表、博客文章页）。
-
-### SSG
-
-Static Site Generation（静态生成）
-
-**原理：**
-
-- 在 **构建时** 就生成所有页面的 HTML
-- 部署后直接走 CDN 静态文件
-
-```mermaid
-graph LR
-A[构建阶段] --> B[生成 HTML 文件]
-B --> C[部署到 CDN]
-C --> D[用户访问时直接命中静态文件]
-```
-
-**特点：**访问极快，几乎无服务器负担，但内容固定（除非重新部署）。
-
-```tsx
-export const dynamic = "force-static"; // 强制 SSG
-
-export async function generateStaticParams() {
-  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
-  return posts.map((p) => ({ slug: p.slug }));
-}
-
-export default function Post({ params }) {
-  // 所有静态页面在构建时生成
-}
-```
-
-**适用场景**：几乎不变化的页面（如博客、产品文档、Landing Page）
-
-### CSR
-
-Client-Side Rendering（客户端渲染）
-
-**原理：**
-
-- 首屏返回一个空的 HTML + JS；
-- 浏览器加载 JS 后，自己 fetch 数据并渲染页面。
-
-```mermaid
-graph LR
-A[浏览器请求页面] --> B[返回空 HTML + JS]
-B --> C[客户端 fetch 数据]
-C --> D[React 渲染 DOM]
-```
-
-**特点：**完全在浏览器端渲染，不适合 SEO，但最灵活，适合复杂交互。
-
-```tsx
-"use client";
-import { useEffect, useState } from "react";
-
-export default function Dashboard() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/user").then(res => res.json()).then(setData);
-  }, []);
-
-  return <div>{data ? data.name : "Loading..."}</div>;
-}
-```
-
-**适用场景**：后台管理系统、可视化界面、登录后交互页面、控制台、表单页面等。
-
-总结一句话：
-
-1、**SSR**：实时渲染，适合频繁变动内容
-
-2、**ISR**：准实时渲染，兼顾性能与动态
-
-3、**SSG**：构建时生成，性能最强但静态
-
-4、**CSR**：客户端渲染，适合登录后复杂交互
 
 # 创建项目
 
@@ -170,7 +18,7 @@ export default function Dashboard() {
 $ pnpm create next-app@latest nextjs-template [--yes]
 ✔ Would you like to use the recommended Next.js defaults? › No, customize settings
 ✔ Would you like to use TypeScript? … No / 【Yes】
-✔ Which linter would you like to use? › Biome
+✔ Which linter would you like to use? › None
 ✔ Would you like to use React Compiler? … No / 【Yes】
 ✔ Would you like to use Tailwind CSS? … No / 【Yes】
 ✔ Would you like your code inside a `src/` directory? … No / 【Yes】
@@ -180,7 +28,10 @@ $ pnpm create next-app@latest nextjs-template [--yes]
 ✔ What import alias would you like configured? … @/*
 ```
 
-> **提示**：`--yes` 会跳过提示，使用已保存的偏好或默认设置。
+> **提示**：
+>
+> - `--yes` 会跳过提示，使用已保存的偏好或默认设置。
+> - 校验工具选择 `None`，后续会单独配置 `oxlint` + `prettier`。
 
 # 目录结构
 
@@ -189,7 +40,7 @@ $ pnpm create next-app@latest nextjs-template [--yes]
 ```
 $ tree -I 'node_modules' -L 3
 .
-├── biome.json
+├── .prettierrc
 ├── commitlint.config.js
 ├── env/
 ├── env.d.ts
@@ -252,6 +103,276 @@ $ tree -I 'node_modules' -L 3
 │   └── types
 └── tsconfig.json
 ```
+
+# 开发规范
+
+## 代码规范检查与修复
+
+选择 [oxlint ↪](https://oxc-project.github.io/)
+
+oxlint 是一个用 Rust 编写的极速 JavaScript/TypeScript linter，性能优异，适合大型项目。
+
+1、安装依赖
+
+```shell
+$ pnpm add -D oxlint
+```
+
+2、在 package.json 文件中加入如下快捷指令
+
+```json
+{
+  "scripts": {
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix ."
+  }
+}
+```
+
+3、统一风格，项目内配置 `.vscode` 目录
+
+```shell
+$ mkdir -p .vscode && touch .vscode/{extensions,settings}.json
+```
+
+> `settings.json`
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.requireConfig": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
+```
+
+> `extensions.json`
+
+```json
+{
+  "recommendations": [
+    "esbenp.prettier-vscode"
+  ]
+}
+```
+
+## 代码格式化
+
+选择 [Prettier ↪](https://prettier.io/) + [prettier-plugin-tailwindcss ↪](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)
+
+使用 Prettier 配合 `prettier-plugin-tailwindcss` 实现 Tailwind 类名自动排序，使用 `@trivago/prettier-plugin-sort-imports` 实现导入排序。保存文件时会自动删除未使用的 import、排序导入和类名、格式化代码。
+
+1、安装依赖
+
+```shell
+$ pnpm add -D prettier prettier-plugin-tailwindcss @trivago/prettier-plugin-sort-imports
+```
+
+2、根目录新建 `.prettierrc` 文件
+
+```json
+{
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "importOrder": [
+    "^react$",
+    "^next",
+    "<THIRD_PARTY_MODULES>",
+    "^@/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "jsxSingleQuote": false,
+  "arrowParens": "always",
+  "endOfLine": "lf"
+}
+```
+
+3、在 package.json 中添加格式化脚本
+
+```json
+{
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
+```
+
+4、配置 VS Code / Cursor
+
+安装 [Prettier - Code formatter ↪](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) 扩展，编辑器设置已在上方【代码规范检查与修复】章节第3步配置完成。
+
+> **提示**：
+>
+> - `plugins` 数组中，`prettier-plugin-tailwindcss` 必须放在最后，以确保 Tailwind 类名排序正确
+> - `importOrder` 配置导入排序规则：React → Next.js → 第三方库 → 项目内部（@/） → 相对路径
+> - `importOrderSeparation` 为 `true` 时，不同组之间会插入空行
+> - `importOrderSortSpecifiers` 为 `true` 时，同一导入语句中的多个导入会按字母顺序排序
+> - 删除未使用的 import 功能由 TypeScript/JavaScript 语言服务提供，无需额外配置
+
+## Commit 规范检查
+
+推荐：Conventional Commits + Husky + lint-staged + Commitlint
+
+这套组合可以在提交前自动检查代码规范、校验 commit 信息格式，并提供交互式的提交体验。
+
+1、安装依赖
+
+```shell
+$ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
+```
+
+2、在 `package.json` 中配置 `lint-staged`
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "oxlint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+当你执行 git commit 时，lint-staged 会自动：
+- 运行 `oxlint --fix` 修复代码规范问题
+- 运行 `prettier --write` 格式化代码（包括 Tailwind 类名排序和导入排序）
+
+确保提交的代码风格统一、格式正确。
+
+3、初始化 husky
+
+```shell
+$ pnpm husky init
+```
+
+这会自动创建 .husky/ 目录和一个默认的 pre-commit 钩子。
+
+4、配置 pre-commit 钩子，编辑 .husky/pre-commit 文件：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 在提交前执行代码格式化与检查
+pnpm lint-staged
+```
+
+提交前会自动运行 lint-staged，确保提交的代码风格、语法正确。
+
+5、配置 commit-msg 钩子，创建 .husky/commit-msg 文件：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm commitlint --edit "$1"
+```
+
+这个钩子会在每次提交时校验你的提交信息是否符合 Conventional Commits 规范。
+
+6、创建 commitlint 配置，在项目根目录新建 `commitlint.config.js`：
+
+```js
+export default {
+  extends: ["@commitlint/config-conventional"],
+  rules: {
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat",      // ✨ 新功能
+        "fix",       // 🐛 修复 bug
+        "docs",      // 📝 文档更新
+        "style",     // 💅 代码格式（不影响逻辑）
+        "refactor",  // ♻️ 重构（非新增功能、非修复）
+        "perf",      // ⚡️ 性能优化
+        "test",      // ✅ 测试相关修改
+        "build",     // 🏗️ 构建系统或依赖更新
+        "ci",        // 🤖 CI/CD 配置变更
+        "chore",     // 🔧 杂项任务
+        "revert"     // ⏪ 回滚提交
+      ]
+    ],
+    "subject-case": [0]
+  }
+}
+```
+
+现在，当你执行 git commit 时，Husky 会自动触发以下两个钩子：
+
+| **阶段** | **钩子名** | **执行内容**                | **目的**                   |
+| -------- | ---------- | --------------------------- | -------------------------- |
+| 提交前   | pre-commit | pnpm lint-staged            | 检查暂存区代码是否符合规范 |
+| 提交时   | commit-msg | pnpm commitlint --edit "$1" | 校验提交信息格式           |
+
+👉 这样，你的项目会在提交时自动检查代码质量和提交信息规范，确保仓库记录干净、统一、可读。
+
+7、引导式提交（推荐）
+
+为了让团队成员更方便地书写规范化的 commit message，我们可以使用 **Commitizen** 提供交互式提交体验：
+
+```shell
+$ pnpm add -D commitizen cz-conventional-changelog
+```
+
+在 package.json 中添加配置：
+
+```json
+{
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "scripts": {
+    "commit": "cz"
+  }
+}
+```
+
+然后执行命令：
+
+```shell
+$ pnpm commit
+```
+
+系统会弹出一个交互式命令行界面，引导你选择提交类型、填写变更说明。
 
 # 环境变量
 
@@ -418,183 +539,6 @@ process.env.env
 process.env.NEXT_PUBLIC_BRAND
 ```
 
-# 开发规范
-
-## 代码规范检查与修复 + 代码风格
-
-选择 [Biome ↪](https://biomejs.dev/zh-cn/)
-
-在初始化项目时，我们已经选择了基于 Biome 来实现代码规范检查与修复和代码风格的控制，接下来我们简单配置。
-
-1、安装 [Biome VS Code 扩展 ↪](https://marketplace.visualstudio.com/items?itemName=biomejs.biome)，快捷键 <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>X</kbd>
-
-2、快捷键 <kbd>Cmd</kbd> + <kbd>,</kbd> 搜索 Editor: Default Formatter，选择 Biome 作为默认格式化程序
-
-3、搜索 Editor: Format On Save，☑️ 保存时设置文件格式
-
-4、在 package.json 文件中加入如下快捷指令
-
-```
-"lint": "biome check .",
-"lint:fix": "biome check --write .",
-```
-
-5、统一风格，项目内配置 `.vscode` 目录
-
-```shell
-$ mkdir -p .vscode && touch .vscode/{extensions,settings}.json
-$ tree .vscode -a
-.vscode
-├── extensions.json
-└── settings.json
-```
-
-> `settings.json`
-
-```json
-{
-	"editor.defaultFormatter": "biomejs.biome",
-	"editor.formatOnSave": true,
-	"editor.insertSpaces": true,
-	"editor.tabSize": 2,
-	"editor.codeActionsOnSave": {
-		"source.fixAll.biome": "explicit",
-		"source.organizeImports.biome": "explicit"
-	}
-}
-```
-
-> `extensions.json`
-
-```tsx
-{
-  "recommendations": ["biomejs.biome"]
-}
-```
-
-## Commit 规范检查
-
-推荐：Conventional Commits + Husky + lint-staged + Commitlint
-
-这套组合可以在提交前自动检查代码规范、校验 commit 信息格式，并提供交互式的提交体验。
-
-1、安装依赖
-
-```shell
-$ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
-```
-
-2、在 `package.json` 中配置 `lint-staged`
-
-```json
-"lint-staged": {
-  "*.{js,jsx,ts,tsx}": [
-    "pnpm lint"
-  ]
-},
-```
-
-当你执行 git commit 时，lint-staged 会自动运行 pnpm lint 来检查暂存区的文件，防止格式或语法问题被提交。
-
-3、初始化 husky
-
-```shell
-$ pnpm husky init
-```
-
-这会自动创建 .husky/ 目录和一个默认的 pre-commit 钩子。
-
-4、配置 pre-commit 钩子，编辑 .husky/pre-commit 文件：
-
-```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# 在提交前执行代码格式化与检查
-pnpm lint-staged
-```
-
-提交前会自动运行 lint-staged，确保提交的代码风格、语法正确。
-
-5、配置 commit-msg 钩子，创建 .husky/commit-msg 文件：
-
-```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-pnpm commitlint --edit "$1"
-```
-
-这个钩子会在每次提交时校验你的提交信息是否符合 Conventional Commits 规范。
-
-6、创建 commitlint 配置，在项目根目录新建 `commitlint.config.js`：
-
-```js
-export default {
-  extends: ["@commitlint/config-conventional"],
-  rules: {
-    "type-enum": [
-      2,
-      "always",
-      [
-        "feat",      // ✨ 新功能
-        "fix",       // 🐛 修复 bug
-        "docs",      // 📝 文档更新
-        "style",     // 💅 代码格式（不影响逻辑）
-        "refactor",  // ♻️ 重构（非新增功能、非修复）
-        "perf",      // ⚡️ 性能优化
-        "test",      // ✅ 测试相关修改
-        "build",     // 🏗️ 构建系统或依赖更新
-        "ci",        // 🤖 CI/CD 配置变更
-        "chore",     // 🔧 杂项任务
-        "revert"     // ⏪ 回滚提交
-      ]
-    ],
-    "subject-case": [0]
-  }
-}
-```
-
-现在，当你执行 git commit 时，Husky 会自动触发以下两个钩子：
-
-| **阶段** | **钩子名** | **执行内容**                | **目的**                   |
-| -------- | ---------- | --------------------------- | -------------------------- |
-| 提交前   | pre-commit | pnpm lint-staged            | 检查暂存区代码是否符合规范 |
-| 提交时   | commit-msg | pnpm commitlint --edit "$1" | 校验提交信息格式           |
-
-👉 这样，你的项目会在提交时自动检查代码质量和提交信息规范，确保仓库记录干净、统一、可读。
-
-7、引导式提交（推荐）
-
-为了让团队成员更方便地书写规范化的 commit message，我们可以使用 **Commitizen** 提供交互式提交体验：
-
-```shell
-$ pnpm add -D commitizen cz-conventional-changelog
-```
-
-在 package.json 中添加配置：
-
-```json
-{
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
-  "scripts": {
-    "commit": "cz"
-  }
-}
-```
-
-然后执行命令：
-
-```shell
-$ pnpm commit
-```
-
-系统会弹出一个交互式命令行界面，引导你选择提交类型、填写变更说明。
-
 # 样式
 
 @See https://nextjs.org/docs/app/getting-started/css
@@ -646,50 +590,9 @@ export function clsx(...inputs: CxOptions) {
 
 ## 类名排序
 
-tailwindcss 保存时设置类名排序（Biome 目前不支持tailwindcss类名排序，因此需要混合使用 Prettier）
+Tailwind CSS 类名排序已通过 `prettier-plugin-tailwindcss` 插件自动处理，无需额外配置。保存文件时，Prettier 会自动按照 Tailwind 推荐的顺序对类名进行排序。
 
-1、安装依赖
-
-```shell
-$ pnpm add -D prettier prettier-plugin-tailwindcss
-```
-
-2、根目录新建 `.prettierrc` 文件
-
-```json
-{
-  "plugins": ["prettier-plugin-tailwindcss"],
-  "singleQuote": true,
-  "semi": true,
-  "trailingComma": "all",
-  "printWidth": 100,
-  "bracketSpacing": true,
-  "jsxSingleQuote": false,
-  "arrowParens": "always",
-  "endOfLine": "lf"
-}
-```
-
-3、`.vscode/settings.json`（Biome + Prettier 联动）
-
-```json
-{
-  "editor.defaultFormatter": "biomejs.biome",
-  "editor.formatOnSave": true,
-  "editor.insertSpaces": true,
-  "editor.tabSize": 2,
-
-  "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
-  },
-
-  // TSX 文件使用 Prettier（Tailwind 类名排序）
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
-}
-```
+> **提示**：`prettier-plugin-tailwindcss` 必须作为 Prettier 配置中的最后一个插件，以确保正确排序。
 
 # 获取数据
 
