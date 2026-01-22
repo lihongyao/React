@@ -254,7 +254,6 @@ export const useCounterStore = create(
     }),
     {
       name: 'counter-storage',  // 存储名称
-      storage: localStorage,    // 存储位置
     }
   )
 );
