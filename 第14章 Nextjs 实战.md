@@ -73,7 +73,7 @@ $ tree -I 'node_modules' -L 3
 │   │   │   │   └── others...  # 其他页面
 │   │   │   ├── (modals)       # 路由弹框
 │   │   │   ├── (standalone)   # 无需主题布局的路由组
-│   │   │   │   └── xxx  
+│   │   │   │   └── xxx
 │   │   │   └── not-found.tsx  # 多语言路由组 404
 │   │   ├── favicon.ico
 │   │   ├── layout.tsx         # 应用根布局
@@ -172,9 +172,7 @@ $ mkdir -p .vscode && touch .vscode/{extensions,settings}.json
 
 ```json
 {
-  "recommendations": [
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["esbenp.prettier-vscode"]
 }
 ```
 
@@ -258,18 +256,14 @@ $ pnpm add -D husky lint-staged @commitlint/{config-conventional,cli}
 ```json
 {
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "oxlint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["oxlint --fix", "prettier --write"],
+    "*.{json,md,yml,yaml}": ["prettier --write"]
   }
 }
 ```
 
 当你执行 git commit 时，lint-staged 会自动：
+
 - 运行 `oxlint --fix` 修复代码规范问题
 - 运行 `prettier --write` 格式化代码（包括 Tailwind 类名排序和导入排序）
 
@@ -286,9 +280,6 @@ $ pnpm husky init
 4、配置 pre-commit 钩子，编辑 .husky/pre-commit 文件：
 
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # 在提交前执行代码格式化与检查
 pnpm lint-staged
 ```
@@ -298,9 +289,6 @@ pnpm lint-staged
 5、配置 commit-msg 钩子，创建 .husky/commit-msg 文件：
 
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 pnpm commitlint --edit "$1"
 ```
 
@@ -316,22 +304,22 @@ export default {
       2,
       "always",
       [
-        "feat",      // ✨ 新功能
-        "fix",       // 🐛 修复 bug
-        "docs",      // 📝 文档更新
-        "style",     // 💅 代码格式（不影响逻辑）
-        "refactor",  // ♻️ 重构（非新增功能、非修复）
-        "perf",      // ⚡️ 性能优化
-        "test",      // ✅ 测试相关修改
-        "build",     // 🏗️ 构建系统或依赖更新
-        "ci",        // 🤖 CI/CD 配置变更
-        "chore",     // 🔧 杂项任务
-        "revert"     // ⏪ 回滚提交
-      ]
+        "feat", // ✨ 新功能
+        "fix", // 🐛 修复 bug
+        "docs", // 📝 文档更新
+        "style", // 💅 代码格式（不影响逻辑）
+        "refactor", // ♻️ 重构（非新增功能、非修复）
+        "perf", // ⚡️ 性能优化
+        "test", // ✅ 测试相关修改
+        "build", // 🏗️ 构建系统或依赖更新
+        "ci", // 🤖 CI/CD 配置变更
+        "chore", // 🔧 杂项任务
+        "revert", // ⏪ 回滚提交
+      ],
     ],
-    "subject-case": [0]
-  }
-}
+    "subject-case": [0],
+  },
+};
 ```
 
 现在，当你执行 git commit 时，Husky 会自动触发以下两个钩子：
@@ -376,42 +364,28 @@ $ pnpm commit
 
 # 环境变量
 
-在多品牌（如 afun、bfun）以及多环境（开发 / 预发布 / 生产）的项目中，**合理地组织和加载环境变量**，可以让本地开发、构建和部署更加清晰、灵活且稳定。
+多品牌、多环境项目通过统一的环境变量管理，简化开发与部署流程。
 
-1️⃣ **文件设计**
-
-创建环境变量目录与文件
+## 文件结构
 
 ```shell
 $ mkdir -p env && touch env/.env.{afun,bfun}.{dev,stage,prod} env.d.ts
-```
-
-目录结构如下：
-
-```shell
 $ tree env -a
-env.d.ts
 env
 ├── .env.afun.dev
 ├── .env.afun.prod
 ├── .env.afun.stage
+
 ├── .env.bfun.dev
 ├── .env.bfun.prod
 └── .env.bfun.stage
 ```
 
-命名规则说明：
+命名规则：`.env.{brand}.{env}`（如 `.env.afun.dev`）
 
-```
-.env.{brand}.{env}
-```
+## 类型声明
 
-- `brand`：品牌标识（如 `afun`、`bfun`）
-- `env`：运行环境（`dev` / `stage` / `prod`）
-
-2️⃣ **类型声明**
-
-在**项目根目录**添加 env.d.ts：
+项目根目录创建 `env.d.ts`：
 
 ```ts
 // -- 客户端环境变量
@@ -419,7 +393,7 @@ type ClientEnv = {
   NEXT_PUBLIC_ENV: string;
   NEXT_PUBLIC_API_BASE_URL: string;
   NEXT_PUBLIC_BRAND: string;
-}
+};
 
 // -- 服务端环境变量
 type ServerEnv = {
@@ -435,108 +409,50 @@ declare global {
 export {};
 ```
 
-> 注意：所有以 NEXT_PUBLIC_ 开头的变量会被 Next.js 暴露到浏览器端。
->
+> 提示：`NEXT_PUBLIC_` 前缀的变量会暴露到浏览器端。
 
-3️⃣ **文件示例**
+## 配置与使用
 
-以 afun 品牌的 **开发环境** 为例：
-
-```ini
-# .env.afun.dev
-NEXT_PUBLIC_ENV=dev
-NEXT_PUBLIC_API_BASE_URL=https://dev.afun.example.com
-NEXT_PUBLIC_BRAND_NAME=afun
-```
-
-4️⃣ **安装依赖**
-
-使用 dotenv + dotenv-cli 加载环境变量，cross-env 解决跨平台兼容问题：
+1. **安装依赖**
 
 ```shell
-$ pnpm add cross-env dotenv dotenv-cli --save-dev
+$ pnpm add -D cross-env dotenv dotenv-cli tsx
 ```
 
-5️⃣ **脚本配置（基础）**
+2. **脚本配置（推荐参数化）**
 
 ```json
 {
   "scripts": {
-    "dev:afun": "dotenv -e env/.env.afun.dev -- next dev --turbopack",
-    "dev:bfun": "dotenv -e env/.env.bfun.dev -- next dev --turbopack",
-
-    "build:afun-stage": "dotenv -e env/.env.afun.stage -- next build --turbopack",
-    "build:bfun-stage": "dotenv -e env/.env.bfun.stage -- next build --turbopack",
-
-    "build:afun-prod": "dotenv -e env/.env.afun.prod -- next build --turbopack",
-    "build:bfun-prod": "dotenv -e env/.env.bfun.prod -- next build --turbopack"
-  }
-}
-```
-
-该方式**直观但略显冗余**，当品牌或环境增多时不易维护。
-
-6️⃣ **脚本参数化（推荐）**
-
-通过变量参数统一脚本：
-
-```json
-{
-  "scripts": {
+    "predev": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/pre-setup/index.ts",
     "dev": "cross-env dotenv -e env/.env.${app-afun}.dev -- next dev --turbopack",
-		"build": "cross-env dotenv -e env/.env.$app.$env -- next build --turbopack",
+    "prebuild": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/pre-setup/index.ts",
+    "build": "cross-env dotenv -e env/.env.$app.$env -- next build --turbopack"
   }
 }
 ```
 
-使用方式：
+> 提示：`pre-setup/index.ts` 可以让你在构建时处理一些事务。
+
+3. **使用方式**
 
 ```shell
-# 开发环境（默认 afun）
+# 开发（默认 afun）
 $ pnpm dev
 
-# 指定品牌开发
+# 指定品牌/环境
 $ app=afun pnpm dev
-
-# 构建预发布 / 生产环境
 $ app=afun env=stage pnpm build
-$ app=afun env=prod  pnpm build
 ```
 
-7️⃣ **访问环境变量**
+4. **访问变量**
 
 ```tsx
-// 浏览器端 & 服务端
-process.env.NEXT_PUBLIC_API_BASE_URL
+// 客户端 & 服务端
+process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// 仅服务端可用
-process.env.APP_ENV
-```
-
-> 提示：Next.js 会在构建阶段将 NEXT_PUBLIC_ 变量内联到客户端代码中。
-
-8️⃣ **构建前扩展（prebuild）**
-
-如果在构建前需要执行脚本（例如根据品牌动态生成样式文件），可以利用 prebuild 钩子：
-```json
-{
-	  "predev": "cross-env dotenv -e env/.env.${app-afun}.dev -- tsx scripts/gen-brand-css/index.ts",
-		"prebuild": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/gen-brand-css/index.ts",
-}
-```
-
-执行：
-
-```shell
-$ app=afun env=dev pnpm build
-```
-
-在 build 执行前，将自动运行 prebuild，并且在脚本中可以直接访问：
-
-```
-process.env.app
-process.env.env
-process.env.NEXT_PUBLIC_BRAND
+// 仅服务端
+process.env.APP_ENV;
 ```
 
 # 样式
@@ -545,7 +461,7 @@ process.env.NEXT_PUBLIC_BRAND
 
 ## Tailwind CSS
 
-选择： [tailwindcss  ↪](https://tailwindcss.com/)
+选择： [tailwindcss ↪](https://tailwindcss.com/)
 
 创建项目时，已 ☑️ 启用tailwindcss
 
@@ -646,12 +562,15 @@ export default function Counter() {
   return (
     <div>
       <div>计数器：{count}</div>
-      <button type="button" onClick={increment}>+1</button>
-      <button type="button" onClick={decrement}>-1</button>
+      <button type="button" onClick={increment}>
+        +1
+      </button>
+      <button type="button" onClick={decrement}>
+        -1
+      </button>
     </div>
-  )
+  );
 }
-
 ```
 
 # 国际化 next-intl
@@ -672,34 +591,41 @@ export default function Counter() {
 
 ```
 src
-├── next.config.ts                  
+├── next.config.ts
 ├── app
-│   ├── [lang]
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components
-│   │   ├── features     
-│   │   │   ├── ClientComp.tsx
-│   │   │   └── ServerComp.tsx
-│   │   ├── layout
-│   │   │   └── LanguageSwitcher.tsx
-│   │   └── ui
+│   ├── [locale]
+│   │   ├── (home)
+│   │   │   └── page.tsx
+│   │   ├── [...rest]
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── not-found.tsx
+├── components
+│   ├── features
+│   │   ├── ClientComp.tsx
+│   │   ├── LanguageSwitcher.tsx
+│   │   └── ServerComp.tsx
+│   ├── layouts
+│   └── ui
 ├── i18n
-│   ├── locales           # 通过脚本输出 —— pnpm i18n:json
+│   ├── messages           # 通过脚本输出 —— pnpm i18n:json
 │   │   ├── en-US.json
 │   │   ├── es.json
 │   │   ├── pt.json
 │   │   └── zh-CN.json
 │   ├── navigation.ts
 │   ├── request.ts
-│   └── routing.ts		 
-└── proxy.ts	
+│   └── routing.ts
+└── proxy.ts
 ```
 
 ### 安装依赖
 
 ```shell
 $ pnpm add next-intl
+$ pnpm add xlsx -D
 ```
 
 ### 翻译准备
@@ -731,19 +657,22 @@ scripts
 /**
  * src/scripts/excel2json/index.ts
  * Excel → JSON 翻译导出脚本
- * 安装依赖：pnpm add -D xlsx fs path tsx
+ * 安装依赖：pnpm add -D xlsx
  */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import XLSX from 'xlsx';
 
-import fs from "node:fs";
-import path from "node:path";
-import XLSX from "xlsx";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // === 1. 可配置变量 ===
-const EXCEL_FILE_NAME = "translations.xlsx";
-const SHEET_NAME = "Sheet1";
-const ROOT = path.resolve(__dirname, "../../");
-const INPUT_DIR = path.join(ROOT, "/scripts/excel2json");
-const OUTPUT_DIR = path.join(ROOT, "/src/i18n/locales");
+const EXCEL_FILE_NAME = 'translations.xlsx';
+const SHEET_NAME = 'Sheet1';
+const ROOT = path.resolve(__dirname, '../../');
+const INPUT_DIR = path.join(ROOT, '/scripts/excel2json');
+const OUTPUT_DIR = path.join(ROOT, '/src/i18n/messages');
 
 // === 2. 类型定义 ===
 interface ExcelRow {
@@ -764,9 +693,7 @@ const excelPath = path.join(INPUT_DIR, EXCEL_FILE_NAME);
 console.log(`📂 读取 Excel 文件: ${excelPath}`);
 
 const workbook = XLSX.readFile(excelPath);
-const sheet = SHEET_NAME
-  ? workbook.Sheets[SHEET_NAME]
-  : workbook.Sheets[workbook.SheetNames[0]];
+const sheet = SHEET_NAME ? workbook.Sheets[SHEET_NAME] : workbook.Sheets[workbook.SheetNames[0]];
 
 if (!sheet) throw new Error(`❌ 找不到 Excel sheet: ${SHEET_NAME}`);
 console.log(`📄 使用 Sheet: ${SHEET_NAME || workbook.SheetNames[0]}`);
@@ -776,13 +703,13 @@ console.log(`🔑 Excel 共读取 ${rawData.length} 条记录`);
 
 // === 4. 获取语言列 ===
 const header: string[] = Object.keys(rawData[0] || {}).filter(
-  (key) => key !== "key" && key !== "remark",
+  (key) => key !== 'key' && key !== 'remark',
 );
-console.log(`🌐 发现语言列: ${header.join(", ")}`);
+console.log(`🌐 发现语言列: ${header.join(', ')}`);
 
 // === 5. 递归写入对象属性 ===
 function setNested(obj: NestedObject, keyPath: string, value: string) {
-  const keys = keyPath.split(".");
+  const keys = keyPath.split('.');
   let current: NestedObject = obj;
   keys.forEach((k, i) => {
     if (i === keys.length - 1) {
@@ -809,7 +736,7 @@ rawData.forEach((row) => {
 
   header.forEach((lang) => {
     let value = row[lang];
-    if (value !== undefined && value !== null && String(value).trim() !== "") {
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
       value = String(value).trim();
       setNested(result[lang], key, value);
       langCounts[lang] += 1; // 只统计有值的翻译
@@ -818,14 +745,24 @@ rawData.forEach((row) => {
 });
 
 // === 8. 输出 JSON 文件并显示提示 ===
-if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+if (!fs.existsSync(OUTPUT_DIR)) {
+  console.log(`🧹 创建输出目录: ${OUTPUT_DIR}`);
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+} else {
+  console.log(`🧹 清空输出目录下文件: ${OUTPUT_DIR}`);
+  const files = fs.readdirSync(OUTPUT_DIR);
+  files.forEach((file) => {
+    const filePath = path.join(OUTPUT_DIR, file);
+    if (fs.lstatSync(filePath).isFile()) {
+      fs.unlinkSync(filePath); // 删除文件
+    }
+  });
+}
 
 header.forEach((lang) => {
   const filePath = path.join(OUTPUT_DIR, `${lang}.json`);
-  fs.writeFileSync(filePath, JSON.stringify(result[lang], null, 2), "utf8");
-  console.log(
-    `✅ [${lang}] 文件生成: ${filePath}，共 ${langCounts[lang]} 条有效翻译`,
-  );
+  fs.writeFileSync(filePath, JSON.stringify(result[lang], null, 2), 'utf8');
+  console.log(`✅ [${lang}] 文件生成: ${filePath}，共 ${langCounts[lang]} 条有效翻译`);
 });
 
 console.log(`🎉 转换完成！共生成 ${header.length} 个语言文件`);
@@ -837,7 +774,7 @@ console.log(`📂 输出目录: ${OUTPUT_DIR}`);
 
 ```json
 {
-	"i18n:json": "tsx scripts/excel2json/index.ts"
+  "i18n:json": "tsx scripts/excel2json/index.ts"
 }
 ```
 
@@ -848,14 +785,13 @@ console.log(`📂 输出目录: ${OUTPUT_DIR}`);
 1、在 `next.config.ts` 中集成插件
 
 ```ts
-import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
+import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
 };
-
 const withNextIntl = createNextIntlPlugin();
 export default withNextIntl(nextConfig);
 ```
@@ -892,20 +828,28 @@ export const routing = defineRouting({
 
 @See https://next-intl.dev/docs/routing/middleware
 
-> `src/proxy.ts`
-
 ```ts
-import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
+// src/proxy.ts
+import createMiddleware from 'next-intl/middleware';
+import { NextRequest } from 'next/server';
 
-export default createMiddleware(routing);
+import { routing } from './i18n/routing';
 
+const intlMiddleware = createMiddleware(routing);
+
+export default async function proxy(request: NextRequest) {
+  // 处理国际化路由
+  const intlResponse = intlMiddleware(request);
+  // 其他路由处理
+  return intlResponse;
+}
 export const config = {
   // Match all pathnames except for
   // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
   // - … the ones containing a dot (e.g. `favicon.ico`)
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)',
 };
+
 ```
 
 4、设置导航 API
@@ -915,8 +859,9 @@ export const config = {
 > `i18n/navigation.ts`
 
 ```ts
-import { createNavigation } from "next-intl/navigation";
-import { routing } from "./routing";
+import { createNavigation } from 'next-intl/navigation';
+
+import { routing } from './routing';
 
 // Lightweight wrappers around Next.js' navigation
 // APIs that consider the routing configuration
@@ -928,127 +873,150 @@ export const { Link, redirect, usePathname, useRouter, getPathname } = createNav
 > `i18n/request.ts`
 
 ```ts
-import { hasLocale } from "next-intl";
-import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
+import { hasLocale } from 'next-intl';
+import { getRequestConfig } from 'next-intl/server';
+
+import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // Typically corresponds to the `[locale]` segment
   const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested)
-    ? requested
-    : routing.defaultLocale;
-
+  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
   return {
     locale,
-    messages: (await import(`./locales/${locale}.json`)).default,
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });
+
 ```
 
 6、语言路由布局，把所有现有的布局和页面移到 `[lang]` 部分中：
 
 ```tsx
-src
-└── app
-    └── [lang]
-        ├── layout.tsx
-        ├── page.tsx
-        └── ...
+// src/app/layout.tsx
+// Since we have a root `not-found.tsx` page, a layout file
+// is required, even if it's just passing children through.
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return children;
+}
 ```
 
-> `src/[lang]/layout.tsx`
 
 ```tsx
-import "@/app/globals.css";
-import { notFound } from "next/navigation";
-import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
-import { routing } from "@/i18n/routing";
+// src/app/[locale]/layout.tsx
+import type { Metadata, Viewport } from 'next';
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
-type Props = {
-  children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+import '@/app/globals.css';
+import { routing } from '@/i18n/routing';
+import { cn } from '@/lib/class-helpers';
+import { geistMono } from '@/lib/fonts';
+
+export const runtime = 'edge';
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+export const metadata: Metadata = {
+  title: 'Create Next App',
+  description: 'Generated by create next app',
 };
 
-
-export default async function LocaleLayout({ children, params }: Props) {
-  const { lang } = await params;
+export default async function RootLayout({
+  children,
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: { locale: string };
+}>) {
+  const { locale } = await params;
 
   // Ensure that the incoming `locale` is valid
-  if (!hasLocale(routing.locales, lang)) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
   // Enable static rendering
-  setRequestLocale(lang);
+  setRequestLocale(locale);
 
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
 
   return (
-    <html lang={lang}>
-      <body>
-        <NextIntlClientProvider locale={lang} messages={messages}>
+    <html lang={locale}>
+      <body className={cn('antialiased', geistMono.variable)}>
+        <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>
       </body>
     </html>
   );
 }
+
+```
+
+```tsx
+// src/app/[locale]/[...rest]/page.tsx
+import { notFound } from 'next/navigation';
+
+export default function CatchAllPage() {
+  notFound();
+}
 ```
 
 7、使用翻译
 
->  `app/[lang]/page.tsx` 
-
 ```tsx
-import ClientComp from "@/components/features/ClientComp";
-import LanguageSwitcher from "@/components/features/LanguageSwitcher";
-import ServerComp from "@/components/features/ServerComp";
+// src/app/[locale]/(home)/page.tsx
+import ClientComp from '@/components/features/ClientComp';
+import LanguageSwitcher from '@/components/features/LanguageSwitcher';
+import ServerComp from '@/components/features/ServerComp';
 
-export default function Page() {
+export default function HomePage() {
   return (
-    <div className="p-4 flex flex-col items-center gap-4">
-    <LanguageSwitcher />
-     <div className="flex gap-4 items-start">
-       <ClientComp />
-       <ServerComp />
-     </div>
+    <div className="flex flex-col items-center gap-4 p-4">
+      <LanguageSwitcher />
+      <div className="flex items-start gap-4">
+        <ClientComp />
+        <ServerComp />
+      </div>
     </div>
   );
 }
-```
 
-> 客户端组件
+```
 
 ```tsx
 // src/components/features/ClientComp.tsx
-"use client";
-import { useTranslations } from "next-intl";
+'use client';
+import { useTranslations } from 'next-intl';
 
 export default function ClientComp() {
   const t = useTranslations();
   const point = 6000;
   return (
-    <div className="w-full flex flex-col items-center gap-4">
+    <div className="flex w-full flex-col items-center gap-4">
       <div>客户端组件</div>
       <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
-      <div className="bg-gray-200 w-full p-4 space-y-2 text-black">
+      <div className="w-full space-y-2 bg-gray-200 p-4 text-black">
         {/* 1. 没有变量 */}
-        <div>{t("title")}</div>
-        <div>{t("profile.tips")}</div>
+        <div>{t('title')}</div>
+        <div>{t('profile.tips')}</div>
 
         {/* 2. 存在变量（插值） */}
-        <div>{t("profile.reward1", { point })}</div>
+        <div>{t('profile.reward1', { point })}</div>
 
         {/* 3. 自定义渲染 */}
         <div>
-          {t.rich("profile.reward2", {
-            tag: (children) => (
-              <span className="text-red-500 font-bold">{children}</span>
-            ),
+          {t.rich('profile.reward2', {
+            tag: (children) => <span className="font-bold text-red-500">{children}</span>,
             point,
           })}
         </div>
@@ -1059,33 +1027,29 @@ export default function ClientComp() {
 
 ```
 
-> 服务端组件
-
 ```tsx
 // src/components/features/ServerComp.tsx
-import { getTranslations } from "next-intl/server";
+import { getTranslations } from 'next-intl/server';
 
 export default async function ServerComp() {
   const t = await getTranslations();
   const point = 6000;
   return (
-    <div className="w-full flex flex-col items-center gap-4">
+    <div className="flex w-full flex-col items-center gap-4">
       <div>服务端组件</div>
       <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
-      <div className="bg-gray-200 w-full p-4 space-y-2 text-black">
+      <div className="w-full space-y-2 bg-gray-200 p-4 text-black">
         {/* 1. 没有变量 */}
-        <div>{t("title")}</div>
-        <div>{t("profile.tips")}</div>
+        <div>{t('title')}</div>
+        <div>{t('profile.tips')}</div>
 
         {/* 2. 存在变量（插值） */}
-        <div>{t("profile.reward1", { point })}</div>
+        <div>{t('profile.reward1', { point })}</div>
 
         {/* 3. 自定义渲染 */}
         <div>
-          {t.rich("profile.reward2", {
-            tag: (children) => (
-              <span className="text-red-500 font-bold">{children}</span>
-            ),
+          {t.rich('profile.reward2', {
+            tag: (children) => <span className="font-bold text-red-500">{children}</span>,
             point,
           })}
         </div>
@@ -1093,17 +1057,21 @@ export default async function ServerComp() {
     </div>
   );
 }
+
 ```
 
 8、切换语言
 
 ```tsx
 // src/components/features/LanguageSwitcher.tsx
-"use client";
+'use client';
 
-import { usePathname, useRouter } from "next/navigation";
-import { type Locale, routing } from "@/i18n/routing";
-import { clsx } from "@/lib/class-helpers";
+import { useState } from 'react';
+
+import { useLocale } from 'next-intl';
+
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { clsx } from '@/lib/class-helpers';
 
 /**
  * LanguageSwitcher 组件
@@ -1125,80 +1093,68 @@ import { clsx } from "@/lib/class-helpers";
  */
 
 // 语言列表直接包含国旗
-const langs: { code: Locale; label: string }[] = [
-  { code: "zh-CN", label: "🇨🇳 Chinese" },
-  { code: "en-US", label: "🇺🇸 English" },
-  { code: "pt", label: "🇧🇷 Português" },
-  { code: "es", label: "🇪🇸 Español" },
+const langs = [
+  { code: 'zh-CN', label: '🇨🇳 Chinese' },
+  { code: 'en-US', label: '🇺🇸 English' },
+  { code: 'pt', label: '🇧🇷 Português' },
+  { code: 'es', label: '🇪🇸 Español' },
 ];
 
 export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
+  const currentLocale = useLocale();
 
-  // 当前语言前缀
-  const currentLang =
-    routing.locales.find((locale) => pathname?.startsWith(`/${locale}`)) ??
-    routing.defaultLocale;
+  const [loading, setLoading] = useState(false);
 
-  // 切换语言
-  const onSwitchLang = (lang: { code: Locale; label: string }) => {
-    const segments = pathname.split("/").filter(Boolean) as Locale[];
-
-    // 如果 URL 首段是已知语言，直接替换；否则在前面添加
-    if (routing.locales.includes(segments[0])) {
-      segments[0] = lang.code;
-    } else {
-      segments.unshift(lang.code);
-    }
-
-    // 替换当前页面，不增加浏览历史
-    router.replace(`/${segments.join("/")}`);
+  const onSwitchLocale = (locale: string) => {
+    if (loading) return;
+    if (locale === currentLocale) return;
+    setLoading(true);
+    router.replace(pathname, { locale });
   };
 
   return (
     <div className="flex items-center gap-2">
-      {langs.map((lang) => {
-        const isActive = lang.code === currentLang;
-
+      {langs.map((locale) => {
+        const isActive = locale.code === currentLocale;
         return (
           <button
-            key={lang.code}
+            key={locale.code}
             type="button"
-            onClick={() => onSwitchLang(lang)}
+            onClick={() => onSwitchLocale(locale.code)}
             className={clsx(
-              "px-3 py-1.5 border rounded text-sm transition-colors cursor-pointer",
+              'cursor-pointer rounded border px-3 py-1.5 text-sm transition-colors',
               isActive
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100",
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100',
             )}
           >
-            {lang.label}
+            {locale.label}
           </button>
         );
       })}
     </div>
   );
 }
+
 ```
 
 ## 扩展
 
-1. 关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪]( https://github.com/amannn/next-intl/discussions/329)
+1. 关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪](https://github.com/amannn/next-intl/discussions/329)
 
-2. VS Code  插件扩展：[i18n Ally ↪](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally)，配置如下：
+2. VS Code 插件扩展：[i18n Ally ↪](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally)，配置如下：
 
    ```json
    // i18n-ally 配置
    "i18n-ally.sourceLanguage": "en",
    "i18n-ally.displayLanguage": "zh-CN",
-   "i18n-ally.localesPaths": ["src/i18n/locales"],
+   "i18n-ally.localesPaths": ["src/i18n/messages"],
    "i18n-ally.pathMatcher": "{locale}.json",
    "i18n-ally.enabledFrameworks": ["next-intl", "general"],
    "i18n-ally.keystyle": "nested"
    ```
-
-   
 
 # PWA
 
@@ -1257,8 +1213,8 @@ self.addEventListener("install", () => {
    pnpm start:qa
 
 1. 浏览器访问 H5 页面，打开 **DevTools → Application → Manifest**
-2. 检查 **“Add to Home Screen”** 提示和图标
-3. 查看 **Service Worker** 是否注册
+1. 检查 **“Add to Home Screen”** 提示和图标
+1. 查看 **Service Worker** 是否注册
 
 # 多主题多皮肤
 
@@ -1318,6 +1274,5 @@ src/components/ui/Dialog/index.tsx
 > 建议：为了统一导入路径，可在 index.tsx 中做一次 re-export，例如：
 
 ```ts
-export { Dialog } from './DialogComponentFile';
+export { Dialog } from "./DialogComponentFile";
 ```
-
