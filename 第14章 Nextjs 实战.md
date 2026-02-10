@@ -424,10 +424,10 @@ $ pnpm add -D cross-env dotenv dotenv-cli tsx
 ```json
 {
   "scripts": {
-    "predev": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/pre-setup/index.ts",
-    "dev": "cross-env dotenv -e env/.env.${app-afun}.dev -- next dev --turbopack",
-    "prebuild": "cross-env dotenv -e env/.env.$app.$env -- tsx scripts/pre-setup/index.ts",
-    "build": "cross-env dotenv -e env/.env.$app.$env -- next build --turbopack"
+    "predev": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app}.${env} -- tsx scripts/pre-setup/index.ts",
+    "dev": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app}.${env} -- next dev --turbopack",
+    "prebuild": "cross-env app=${app} env=${env} dotenv -e env/.env.${app}.${env} -- tsx scripts/pre-setup/index.ts",
+    "build": "cross-env app=${app} env=${env} dotenv -e env/.env.${app}.${env} -- next build --turbopack",
   }
 }
 ```
@@ -437,7 +437,7 @@ $ pnpm add -D cross-env dotenv dotenv-cli tsx
 3. **使用方式**
 
 ```shell
-# 开发（默认 afun）
+# 开发（默认 afun, dev）
 $ pnpm dev
 
 # 指定品牌/环境
