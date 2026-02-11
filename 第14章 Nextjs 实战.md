@@ -390,14 +390,16 @@ env
 ```ts
 // -- 客户端环境变量
 type ClientEnv = {
-  NEXT_PUBLIC_ENV: string;
-  NEXT_PUBLIC_API_BASE_URL: string;
+  NEXT_PUBLIC_ENV: 'dev' | 'stage' | 'prod';
   NEXT_PUBLIC_BRAND: string;
+  NEXT_PUBLIC_API_HOST_S: string;
+  NEXT_PUBLIC_API_HOST_C: string;
 };
 
 // -- 服务端环境变量
 type ServerEnv = {
-  [__key: string]: unknown;
+  ACCESS_TOKEN: string;
+  [__key__: string]: unknown;
 };
 
 declare global {
@@ -437,7 +439,7 @@ $ pnpm add -D cross-env dotenv dotenv-cli tsx
 3. **使用方式**
 
 ```shell
-# 开发（默认 afun, dev）
+# 开发 👉 默认 afun, dev
 $ pnpm dev
 
 # 指定品牌/环境
@@ -452,7 +454,7 @@ $ app=afun env=stage pnpm build
 process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // 仅服务端
-process.env.APP_ENV;
+process.env.ACCESS_TOKEN;
 ```
 
 # 样式
@@ -601,7 +603,8 @@ src
 │   │   └── layout.tsx
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── not-found.tsx
+│   ├── not-found.tsx
+│   └── page.tsx
 ├── components
 │   ├── features
 │   │   ├── ClientComp.tsx
@@ -818,10 +821,16 @@ export const defaultLocale = "zh-CN";
 
 // -- 定义路由配置
 export const routing = defineRouting({
+  // 支持的语言（如果要依赖于后端接口，或动态获取，需要在中间件中处理）
   locales,
+  // 默认语言
   defaultLocale,
-  localePrefix: "as-needed",
+  // 语言前缀
+  localePrefix: 'as-needed',
+  // 禁用语言检测
+  localeDetection: false,
 });
+
 ```
 
 3、设置代理
@@ -882,6 +891,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Typically corresponds to the `[locale]` segment
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+
   return {
     locale,
     messages: (await import(`./messages/${locale}.json`)).default,
@@ -890,7 +900,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
 ```
 
-6、语言路由布局，把所有现有的布局和页面移到 `[lang]` 部分中：
+6、语言路由布局，把所有现有的布局和页面移到 `[locale]` 部分中：
 
 ```tsx
 // src/app/layout.tsx
@@ -938,6 +948,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   // Ensure that the incoming `locale` is valid
+  // ⚠️ 如果项目中使用路由弹窗，需要注释该代码片段，否则在默认语言下跳转路由弹窗，底层页面会显示 404
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
@@ -968,6 +979,17 @@ import { notFound } from 'next/navigation';
 
 export default function CatchAllPage() {
   notFound();
+}
+```
+
+```tsx
+// src/app/page.tsx
+import { redirect } from 'next/navigation';
+
+import { routing } from '@/i18n/routing';
+
+export default function RootPage() {
+  redirect(`/${routing.defaultLocale}`);
 }
 ```
 
