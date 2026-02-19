@@ -426,10 +426,11 @@ $ pnpm add -D cross-env dotenv dotenv-cli tsx
 ```json
 {
   "scripts": {
-    "predev": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app}.${env} -- tsx scripts/pre-setup/index.ts",
-    "dev": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app}.${env} -- next dev --turbopack",
-    "prebuild": "cross-env app=${app} env=${env} dotenv -e env/.env.${app}.${env} -- tsx scripts/pre-setup/index.ts",
-    "build": "cross-env app=${app} env=${env} dotenv -e env/.env.${app}.${env} -- next build --turbopack",
+     "predev": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app-afun}.${env-dev} -- tsx scripts/pre-setup/index.ts",
+		 "dev": "dotenv -e env/.env.${app-afun}.${env-dev} -- next dev --turbopack",
+
+		 "prebuild": "cross-env app=${app:-afun} env=${env:-dev} dotenv -e env/.env.${app-afun}.${env-dev} -- tsx scripts/pre-setup/index.ts",
+		 "build": "dotenv -e env/.env.${app-afun}.${env-dev} -- next build --turbopack",
   }
 }
 ```
@@ -794,6 +795,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  reactStrictMode: false,
 };
 const withNextIntl = createNextIntlPlugin();
 export default withNextIntl(nextConfig);
@@ -819,7 +821,6 @@ export type Locale = (typeof locales)[number];
 
 export const defaultLocale = "zh-CN";
 
-// -- 定义路由配置
 export const routing = defineRouting({
   // 支持的语言（如果要依赖于后端接口，或动态获取，需要在中间件中处理）
   locales,
@@ -827,10 +828,9 @@ export const routing = defineRouting({
   defaultLocale,
   // 语言前缀
   localePrefix: 'as-needed',
-  // 禁用语言检测
+  // 禁用自动语言检测，当没有语言前缀时始终使用默认语言
   localeDetection: false,
 });
-
 ```
 
 3、设置代理
@@ -847,10 +847,7 @@ import { routing } from './i18n/routing';
 const intlMiddleware = createMiddleware(routing);
 
 export default async function proxy(request: NextRequest) {
-  // 处理国际化路由
-  const intlResponse = intlMiddleware(request);
-  // 其他路由处理
-  return intlResponse;
+  return intlMiddleware(request);
 }
 export const config = {
   // Match all pathnames except for
@@ -897,7 +894,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: (await import(`./messages/${locale}.json`)).default,
   };
 });
-
 ```
 
 6、语言路由布局，把所有现有的布局和页面移到 `[locale]` 部分中：
@@ -948,7 +944,6 @@ export default async function RootLayout({
   const { locale } = await params;
 
   // Ensure that the incoming `locale` is valid
-  // ⚠️ 如果项目中使用路由弹窗，需要注释该代码片段，否则在默认语言下跳转路由弹窗，底层页面会显示 404
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
