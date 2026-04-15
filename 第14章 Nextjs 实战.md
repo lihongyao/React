@@ -1293,3 +1293,62 @@ src/components/ui/Dialog/index.tsx
 ```ts
 export { Dialog } from "./DialogComponentFile";
 ```
+
+# 日志记录
+
+@see https://github.com/winstonjs/winston?tab=readme-ov-file#quick-start
+
+1️⃣ 安装依赖
+
+```shell
+$ pnpm add winston
+```
+
+2️⃣ 创建日志目录
+
+```shell
+$ mkdir logs
+```
+
+> 注意：生产环境 Node 进程需要对这个目录有写权限。
+
+3️⃣ 创建 logger 单例
+
+```ts
+// libs/logger.server.ts
+// @see https://github.com/winstonjs/winston?tab=readme-ov-file#quick-start
+
+import { createLogger, format, transports } from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
+import path from "node:path";
+
+// 日志目录
+const logDir = path.join(process.cwd(), "logs");
+
+// 日志配置
+const logger = createLogger({
+  // 日志级别
+  level: "info",
+  // 日志格式
+  format: format.combine(
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    format.printf(({ timestamp, level, message }) => `${timestamp} [${level}] ${message}`),
+  ),
+  // 日志输出
+  transports: [
+    new transports.Console(),
+    new DailyRotateFile({
+      filename: path.join(logDir, "app-%DATE%.log"),
+      datePattern: "YYYY-MM-DD",
+      maxFiles: "14d",
+      zippedArchive: true,
+    }),
+  ],
+});
+
+export default logger;
+```
+
+- DailyRotateFile 实现日志轮转，避免单文件过大。
+- Console 可以在开发环境直接看到日志。
+- 日志文件会在 logs/ 下生成，每天一个文件，保留 14 天。
