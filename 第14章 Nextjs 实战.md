@@ -1352,3 +1352,36 @@ export default logger;
 - DailyRotateFile 实现日志轮转，避免单文件过大。
 - Console 可以在开发环境直接看到日志。
 - 日志文件会在 logs/ 下生成，每天一个文件，保留 14 天。
+
+# Code Inspector
+
+[Code Inspector ↪](https://inspector.fe-dev.cn/) 是一款提升开发效率的工具，点击页面上的 DOM，它能够自动打开你的 IDE 并将光标定位到 DOM 对应的源代码位置。
+
+1）安装
+
+```shell
+$ pnpm add code-inspector-plugin -D
+```
+
+2）配置
+
+```ts
+// next.config.js
+import type { NextConfig } from 'next';
+import { codeInspectorPlugin } from 'code-inspector-plugin';
+
+const nextConfig: NextConfig = {
+  turbopack: {
+    rules: codeInspectorPlugin({
+      bundler: 'turbopack',
+    }),
+  },
+};
+
+export default nextConfig;
+```
+
+3）使用
+
+- macOS：<kbd>Options</kbd> + <kbd>Shift</kbd> + 鼠标点击指定 DOM  元素
+- windows：<kbd>Alt</kbd> + <kbd>Shift</kbd> + 鼠标点击指定 DOM  元素
