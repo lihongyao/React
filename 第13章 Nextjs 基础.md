@@ -81,7 +81,9 @@ $ code nextjs-learns
 $ pnpm dev
 ```
 
-# 目录结构
+# 开始
+
+## 目录结构
 
 @See https://nextjs.org/docs/app/getting-started/project-structure
 
@@ -109,7 +111,7 @@ src/app
 | 并行路由 | `@name`       | 同时渲染多个 UI 分支   |
 | 私有目录 | `_folder`     | 不会成为路由           |
 
-## `(group)`
+### `(group)`
 
 @See https://nextjs.org/docs/app/getting-started/project-structure#route-groups
 
@@ -125,7 +127,7 @@ app/
     └── cart/page.tsx       # URL: /cart
 ```
 
-## `[slug]`
+### `[slug]`
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes
 
@@ -138,7 +140,7 @@ app/
          └── page.tsx       # URL: /blog/123
 ```
 
-##  `[...slug]`
+###  `[...slug]`
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes#catch-all-segments
 
@@ -152,7 +154,7 @@ app/
  
 ```
 
-##  `[[...slug]]`
+###  `[[...slug]]`
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes#optional-catch-all-segments
 
@@ -165,7 +167,7 @@ app/
         └── page.tsx  
 ```
 
-## `@folderName`
+### `@folderName`
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes
 
@@ -180,7 +182,7 @@ app/
 └── layout.tsx     # 可以同时渲染 team 和 analytics
 ```
 
-## `_folderName`
+### `_folderName`
 
 @See https://nextjs.org/docs/app/getting-started/project-structure#private-folders
 
@@ -194,13 +196,13 @@ app/
     └── page.tsx             # URL: /dashboard
 ```
 
-# 路由
+## 路由
 
 @See https://nextjs.org/docs/app/building-your-application/routing
 
 > 温馨提示：本示例主要使用 `APP Router`。
 
-## 定义路由
+### 定义路由
 
 Next.js 使用 **基于文件系统的路由**，文件夹与文件决定页面的 URL 结构。
 
@@ -235,7 +237,7 @@ page.tsx 文件使该路由段可访问。
    app/dashboard/page.tsx/users   # ❌ 不允许
    ```
 
-## 布局和模板
+### 布局和模板
 
 @See https://nextjs.org/docs/app/getting-started/layouts-and-pages
 
@@ -250,7 +252,7 @@ page.tsx 文件使该路由段可访问。
 
 模板 = 每次导航重新创建（状态不保留）
 
-## 链接和导航
+### 链接和导航
 
 @See https://nextjs.org/docs/app/getting-started/linking-and-navigating
 
@@ -261,11 +263,11 @@ Next.js 有四种在路由之间导航的方法：
 3. 使用 [redirect](https://nextjs.org/docs/app/api-reference/functions/redirect) 函数 —— 服务端组件
 4. 使用 [History API](https://nextjs.org/docs/app/getting-started/linking-and-navigating#native-history-api)
 
-## 重定向
+### 重定向
 
 @See https://nextjs.org/docs/app/guides/redirecting
 
-## 动态路由
+### 动态路由
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes
 
@@ -311,7 +313,7 @@ export default async function Page({
 > 温馨提示：在 Next.js 中，params 是一个 Promise 属性，因此无法直接使用它的值。
 >
 
-## 并行（平行）路由
+### 并行（平行）路由
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes
 
@@ -321,7 +323,7 @@ Next.js 的 **平行路由（Parallel Routes）** 允许在同一页面上同时
 
 默认情况下，Next.js 会跟踪每个槽的活动状态，受导航类型（软导航/硬导航）影响。在平行路由页面及其子页面刷新时可能出现 404，此时可以通过定义 default.tsx 文件提供后备 UI。
 
-## 拦截路由
+### 拦截路由
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/intercepting-routes
 
@@ -535,13 +537,13 @@ export default function RootLayout({
 
 ```
 
-## 路由处理程序
+### 路由处理程序
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/route
 
 > 提示：前后端分离的应用，几乎用不到。
 
-## 路由参数
+### 路由参数
 
 这里主要介绍在服务端组件和客户端组件中获取 `params` 和 `query` 参数的方式：
 
@@ -550,244 +552,299 @@ export default function RootLayout({
 | 获取Params  | `props.params` — Promise | `useParams()`       |
 | 获取Queries | `props.searchParams`     | `useSearchParams()` |
 
-# 服务端组件和客户端组件
+## 服务端组件和客户端组件
 
 @See https://nextjs.org/docs/app/getting-started/server-and-client-components
 
-默认情况下，布局和页面都是服务器组件。它允许你在服务器端获取数据并渲染部分 UI，还可以选择缓存结果，并将其流式传输到客户端。当需要交互功能或浏览器 API 时，可以使用客户端组件。逐步添加功能。
+默认情况下，App Router 中的 `layout` 和 `page` 都是 **服务端组件**。
+
+- 服务端组件负责取数据、拼页面、减少浏览器 JS。
+- 客户端组件负责交互、状态和浏览器 API。
+
+一句话：**能放服务端就放服务端，只有需要交互时才拆成客户端组件。**
 
 相关示例请参考 [这里 ↪](https://nextjs.org/docs/app/getting-started/server-and-client-components#examples)
 
-## 如何使用？
+### 如何使用？
 
-当您需要以下情况时，请使用 **客户端组件**：
+需要这些能力时，使用 **客户端组件**：
 
-- 管理状态以及事件处理，例如 onClick、onChange
-- 生命周期逻辑，例如 useEffect
-- 仅限浏览器使用的 API，例如 localStorage、window、navigator.geolocation
-- 自定义 Hook 或可复用逻辑
+- 状态和事件：`useState`、`onClick`、`onChange`
+- 副作用：`useEffect`
+- 浏览器 API：`window`、`localStorage`、`navigator`
+- 依赖客户端能力的第三方组件
 
-当您需要以下情况时，请使用 **服务器组件**：
+需要这些能力时，使用 **服务端组件**：
 
-- 从数据库或 API 获取数据
-- 使用 API 密钥、令牌或其他机密信息，而不暴露给客户端
-- 减少发送到浏览器的 JavaScript 代码量
-- 改进首次内容绘制（FCP）并将内容逐步流式传输给客户端
+- 获取数据库或 API 数据
+- 使用密钥、Token 等服务端私密信息
+- 减少发送到浏览器的 JavaScript
+- 做缓存、预渲染、流式返回
 
-## 工作原理
+### 工作原理
 
-### **1️⃣** 在服务器端
+#### **1️⃣** 在服务器端
 
-- Next.js 使用 React 的 API 来协调渲染，每个路由段（布局或页面）被拆分成独立的块进行处理。
-- **服务器组件** 被渲染成一种特殊的数据格式：**React 服务器组件有效载荷（RSC Payload）**。
-- **RSC Payload** 包含：
-  - 服务器组件的渲染结果
-  - 指定客户端组件渲染位置的占位符及对应 JS 文件引用
-  - 从服务器组件传递给客户端组件的属性
-- HTML 与 RSC Payload 结合，用于服务端预渲染页面。
+- 服务端组件在服务器执行，结果会被编码成 **RSC Payload**。
+- 客户端组件不会在这里完成交互，只会留下位置和 JS 引用。
+- Next.js 结合 HTML 和 RSC Payload，让浏览器先看到首屏内容。
 
-### 2️⃣ 客户端（首次加载）
+#### 2️⃣ 客户端（首次加载）
 
-- 浏览器首先显示服务端渲染的 HTML，实现快速首屏渲染。
-- RSC Payload 用于协调客户端与服务器组件树，确保状态与数据同步。
-- 客户端组件的 JS 被注入，使页面可交互。
+- 浏览器先展示 HTML。
+- 再用 RSC Payload 还原组件树。
+- 最后加载客户端组件的 JS，让交互生效。
 
-### 3️⃣ 水合作用
+#### 3️⃣ 水合作用
 
-- **Hydration** 是 React 将静态 HTML 附加事件处理器的过程，使页面变为可交互。
-- 浏览器在加载 HTML 后，客户端 JS 会将事件绑定到对应元素上。
+- **Hydration** 就是给静态 HTML 绑定事件。
+- 只有客户端组件需要水合，服务端组件本身不会把组件 JS 发到浏览器。
 
-### 4️⃣ 后续导航
+#### 4️⃣ 后续导航
 
-- RSC Payload 被预先获取并缓存，用于即时导航。
-- 客户端组件在后续导航中完全在客户端渲染，无需再次请求服务端 HTML。
+- Next.js 会预取并缓存新的 RSC Payload，让路由切换更快。
+- 服务端组件需要时仍然在服务器执行；客户端组件负责浏览器里的交互更新。
 
-## 如何启用？
+### 如何启用？
 
-页面默认是服务端渲染，如果要启用客户端组件，在文件顶部通过 `use client` 声明。
+在文件顶部添加 `"use client"`，这个文件导出的组件就会成为客户端组件入口。
 
-## 最佳实践
+```tsx
+"use client";
+```
 
-在实际开发中，Next.js 页面通常作为服务端组件进行渲染，以保证快速首屏加载和减小客户端 JS 包体积。可将需要交互或状态管理的细粒度组件拆分为客户端组件，通过 props 将数据从服务器组件传递给客户端组件，实现高效渲染。客户端组件与服务端组件可以交错使用，对于共享状态，可通过客户端 Provider 管理：全局状态放置在 RootLayout 中，页面级状态放置在对应 page.tsx 中，从而在保持服务端渲染性能的同时，提供客户端交互能力和精细化状态管理。
+注意：`"use client"` 是一个**边界**。标记后，该文件导入的模块和子组件也会进入客户端 bundle，所以不要随手加在大组件或整个页面上。
 
-# 缓存组件
+### 最佳实践
 
-@See https://nextjs.org/docs/app/getting-started/cache-components
+- 默认写服务端组件，需要交互时再拆客户端组件。
+- 客户端组件越小越好，避免把整页都变成客户端 bundle。
+- 服务端组件可以通过 `props` 给客户端组件传数据，但数据必须可序列化。
+- Provider 尽量放深一点，只包住真正需要共享状态的区域。
 
-Next.js 16 新增的 **组件缓存（Cache Components）** 让你可以缓存组件树中的某段服务器端逻辑，从而提升性能、减少重复请求，并让按需更新（revalidation）更简单。
+## 缓存组件
 
-在前后端分离的场景下，我们前端主要向远程 API 请求数据。Next.js 的 **Cache Components** 是一套把缓存控制从“页面级别”下沉到“组件/函数级别”的工具，能让你按需缓存那些**不常变或可容忍短期过期**的数据，同时保持其它部分动态。
+@See https://nextjscn.org/docs/app/getting-started/cache-components
 
-先说结论：
+Cache Components 是 Next.js 16 的缓存模型：**默认动态，手动缓存稳定内容，动态内容用 Suspense 流式返回**。
 
-- 默认（启用 Cache Components 后）页面是**动态为主**，你显式决定哪些组件/函数要缓存；
-- 使用 use cache 为组件或异步函数建立缓存边界，配合 cacheLife 定义失效时间；
+它解决的是一个常见问题：页面里有些内容可以缓存，例如导航、商品列表、文章列表；有些内容必须实时，例如用户信息、购物车、搜索结果。Cache Components 允许你只缓存稳定部分，而不是把整个页面都变成静态或动态。
 
-- 给请求或缓存打**标签（tag）**，方便之后按需刷新（revalidateTag / updateTag）；
-- 不想缓存时继续用 fetch(..., { cache: 'no-store' })。
+### 核心理解
 
-下面按几个主题讲清楚为什么用、怎么用、注意点。
+- 默认是动态的：不加缓存时，数据按请求执行。
+- 想缓存稳定内容：使用 `use cache`。
+- 想控制缓存时长：使用 `cacheLife`。
+- 想按需刷新缓存：使用 `cacheTag` + `revalidateTag` / `updateTag`。
+- 依赖请求级数据：放进 `<Suspense>`，让页面先返回静态外壳。
 
-## 为什么用？
-
-当某些 API 返回的数据不是瞬时变化的（例如公共列表、配置、静态内容），把这些调用缓存起来能显著降低网络请求并提升首屏速度，同时你还能通过标签或路径手动/按需刷新缓存。
-
-## 怎么用？
-
-### `use cache` **+** `cacheLife`
-
-**组件/函数级缓存**
-
-把耗时或稳定的工作包成一个缓存边界：
+### 启用功能
 
 ```ts
-// app/lib/getPosts.ts
-import { cacheLife } from 'next/cache'
+// next.config.ts
+export default {
+  cacheComponents: true,
+};
+```
 
-export async function getPosts() {
-  'use cache'
-  cacheLife('hours')   // 或 cacheLife(3600) 等
-  return await fetch('https://api.example.com/posts').then(r => r.json())
+### 缓存稳定数据
+
+`use cache` 用来标记可缓存的组件或函数，`cacheLife` 用来设置缓存生命周期。
+
+```ts
+import { cacheLife } from "next/cache";
+
+async function getPosts() {
+  "use cache";
+  cacheLife("hours");
+
+  return fetchPosts();
 }
 ```
 
-把 'use cache' 放在组件或函数顶端后，Next.js 会把这个作用域内的数据/计算缓存起来并按 cacheLife 失效。
+适合：文章列表、商品分类、站点配置、CMS 内容等不需要每次请求都实时更新的数据。
 
-### `fetch(..., { next: { tags: [...] } })`
+### 标记缓存
 
-**给请求打标签**
-
-在 fetch 时打标签，方便后续按标签刷新：
+`cacheTag` 用来给缓存打标签，后续可以按标签刷新。
 
 ```ts
-await fetch('/api/posts', { next: { tags: ['posts'] } })
+import { cacheLife, cacheTag } from "next/cache";
+
+async function getPosts() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("posts");
+
+  return fetchPosts();
+}
 ```
 
-### `revalidateTag('name', 'max')`
+### 刷新缓存
 
-**按标签重新验证**
-
-在某个后端操作或 Server Action 中触发按需刷新（stale-while-revalidate）：
+`revalidateTag` 适合“允许短暂旧数据”的场景。它会先返回旧缓存，再在后台更新。
 
 ```ts
-import { revalidateTag } from 'next/cache'
-await revalidateTag('posts', 'max')
+import { revalidateTag } from "next/cache";
+
+revalidateTag("posts", "max");
 ```
 
-'max' 表示使用 stale-while-revalidate：先继续提供旧数据，后台去拉新数据再更新缓存。
+适合：后台发布文章、CMS Webhook、商品信息更新。
 
-### `updateTag('name')`
-
-**立即失效，用于写操作后**
-
-写操作（用户创建/修改）后，如果希望读取马上看到最新数据，在 Server Action 里调用：
+`updateTag` 适合“写完立刻读到新数据”的场景，只能在 Server Action 中使用。
 
 ```ts
-import { updateTag } from 'next/cache'
-await updateTag('posts')   // 立即使 posts 标签缓存失效
+"use server";
+
+import { updateTag } from "next/cache";
+
+updateTag("posts");
 ```
 
-updateTag 主要用于**写后立即失效**场景，适合需要读写一致性的 UX。
+适合：用户提交表单后，马上看到自己刚创建或修改的数据。
 
-### `revalidatePath('/some/path')`
-
-**按路径刷新**
-
-如果你只想让某个页面/路由重新验证数据：
+`revalidatePath` 用来刷新某个页面或布局路径。
 
 ```ts
-import { revalidatePath } from 'next/cache'
-await revalidatePath('/dashboard')
+import { revalidatePath } from "next/cache";
+
+revalidatePath("/dashboard");
 ```
 
-## 注意事项
+适合：只想刷新某个路由，而不是所有使用同一标签的数据。
 
-- **必须启用** cacheComponents: true（next.config）才能使用 Cache Components 功能。
-- use cache 的参数 **必须可序列化**（普通对象/数组/原始值），不能传复杂类实例或函数（除非不去 introspect）。
-- 如果组件依赖请求级运行时数据（如 cookies()、headers()、searchParams），就不能在静态预渲染阶段使用，需要把该部分放进 \<Suspense> 边界或保持动态。
-- use cache 与 fetch 的 next: { tags }/revalidate 配合使用，能覆盖大多数前端分离场景的缓存需求。
-- updateTag 需要在 **Server Action**（或服务端环境）里调用；前端发起写请求后，后端应负责触发它或返回机制让前端触发相应路由刷新。
+### 处理动态内容
 
-## 实战建议
+依赖 `cookies()`、`headers()`、`searchParams` 或实时 API 的内容，不要放进 `use cache`，而是放进 `<Suspense>`：
 
-- 公共列表（产品列表、分类等）：使用 use cache + cacheLife('hours') 或 fetch(..., { next: { tags: ['posts'] } }) + 周期 revalidate。
-- 用户相关或高度实时的数据：用 cache: 'no-store'（每次请求最新）。
-- 用户提交内容后想马上看见：在后端（或 Server Action）调用 updateTag('posts') 或 revalidatePath('/posts')。
-- 需要兼顾快速首屏和后台刷新：给静态 shell 用 use cache，把会变的部分用 tags + revalidateTag('max') 做 stale-while-revalidate。
+```tsx
+<StaticShell />
 
-# 数据获取
+<Suspense fallback={<Skeleton />}>
+  <DynamicContent />
+</Suspense>
+```
 
-@See https://nextjs.org/docs/app/getting-started/fetching-data
+这样静态外壳可以先返回，动态部分准备好后再流式传输。
 
-在 Next.js 中，数据获取主要分为 **服务端组件** 和 **客户端组件** 两类，适用于前后端分离的场景。
+### 使用建议
 
-## 在服务端组件获取数据
+- 公共、稳定、可短暂过期的数据：`use cache` + `cacheLife`。
+- 需要按内容刷新：`cacheTag` + `revalidateTag("tag", "max")`。
+- 写操作后要马上看到新数据：Server Action 中用 `updateTag`。
+- 只刷新某个页面：`revalidatePath`。
+- 用户态、请求态、实时数据：不要缓存，放进 `<Suspense>` 或客户端实时同步。
 
-服务端组件可以直接使用 fetch 或数据库查询获取数据，渲染后将 HTML 发送给客户端。
+## 数据获取
 
-- 默认情况下，**fetch 不缓存响应**，每次访问页面都会重新请求最新数据。
-- 如果页面没有使用动态 API（如 cookies()、headers() 或 searchParams），Next.js 会在构建阶段进行**预渲染（Prerendering）**，生成静态页面。
-- 静态页面可以通过 **ISR（Incremental Static Regeneration）** 增量更新。
+@See https://nextjscn.org/docs/app/getting-started/fetching-data
 
-示例：
+在 Next.js 中，数据获取优先放在 **服务端组件** 中完成。客户端组件只处理必须依赖浏览器的场景，例如交互、实时同步、`window`、`localStorage`。
+
+一句话：**首屏数据用服务端 `fetch`，交互和实时更新交给客户端。**
+
+### 在服务端组件获取数据
+
+服务端组件可以直接使用原生 `fetch`、ORM 或数据库客户端获取数据。
+
+- 适合首屏必须展示的数据。
+- 可以安全使用密钥、Token、数据库连接等服务端资源。
+- 默认情况下，`fetch` 响应不会被缓存；如果要缓存稳定数据，放到“缓存组件”模块处理。
+- 如果需要每次请求都拿最新数据，可以使用 `{ cache: "no-store" }`。
+
+关键写法：
 
 ```tsx
 export default async function Page() {
-  const data = await fetch("https://jsonplaceholder.typicode.com/posts");
-  const posts = await data.json();
-  return (
-    <ul>
-      {posts.map((post: any) => (
-        <li key={post.id}>{posttitle}</li>
-      ))}
-    </ul>
-  );
+  const res = await fetch("https://api.example.com/posts");
+  const posts = await res.json();
+
+  return <PostList posts={posts} />;
 }
 ```
 
-**动态渲染**
+如果数据来自数据库，直接在服务端组件中查询即可：
 
-如果需要基于请求的实时数据生成页面，可显式设置：
-
-```ts
-export const dynamic = 'force-dynamic';
+```tsx
+const posts = await db.post.findMany();
 ```
 
-> 总结：
->
-> - 无动态依赖：页面可静态生成，支持 ISR。
->- 需动态数据：使用 dynamic = 'force-dynamic' 或依赖动态 API 自动切换到动态渲染。
+### 在客户端组件获取数据
 
-## 在客户端组件获取数据
+客户端获取数据适合这些场景：
 
-客户端组件通常在渲染后通过副作用或数据请求库获取数据：
+- 数据依赖用户操作，例如点击、输入、筛选。
+- 数据需要在页面停留期间持续刷新。
+- 数据依赖浏览器 API，例如 `localStorage`。
+- 使用 WebSocket、SSE、轮询等实时同步能力。
 
-1️⃣ **useEffect** **+ fetch/axios**
+简单场景用原生 `fetch` 就够了：
 
-- 在组件挂载或依赖变化时发起请求。
-- 简单直接，适合少量数据或非关键渲染。
+```tsx
+"use client";
 
-2️⃣ **TanStack Query / SWR 等库**
+useEffect(() => {
+  fetch("/api/user").then(/* 更新状态 */);
+}, []);
+```
 
-- 提供缓存、轮询、请求去重等高级功能。
-- 减少手动状态管理，适合复杂或频繁请求的场景。
+当客户端请求变复杂时，再考虑 SWR 或 React Query，例如：缓存共享、轮询、请求去重、乐观更新、复杂分页。
 
-> 建议：优先在服务端组件获取数据，减小客户端 JS 包体积和首次加载时间；客户端获取适合依赖用户交互、实时更新或个性化请求。
+### 添加搜索和分页
 
-## 添加搜索和分页
+搜索和分页推荐放进 URL 参数中，例如：
 
-使用 URL 参数实现搜索和分页有以下优势：
+```txt
+/dashboard/invoices?query=abc&page=2
+```
 
-- **可书签和共享 URL**：用户可保存或分享当前状态。
-- **服务端渲染**：URL 参数可直接用于服务端渲染初始状态。
-- **数据分析**：便于统计和追踪用户行为。
+这样有三个好处：
 
-相关 Next.js 钩子：
+- 可以复制、分享、刷新页面后保持状态。
+- 服务端组件可以直接根据参数获取首屏数据。
+- 浏览器前进后退行为更自然。
 
-- **客户端组件**：`useSearchParams()` 获取 URL 查询参数，`usePathname()` 获取路径，`useRouter()` 进行导航。
-- **服务端组件**：可通过 `props.searchParams` 获取搜索参数。
+服务端组件读取参数：
 
-# 更新数据
+```tsx
+export default async function Page({ searchParams }) {
+  const { query, page } = await searchParams;
+}
+```
+
+客户端组件更新参数：
+
+```tsx
+const params = new URLSearchParams(searchParams);
+params.set("query", value);
+router.replace(`${pathname}?${params.toString()}`);
+```
+
+### 流式传输
+
+如果某段数据很慢，不要阻塞整个页面。把慢组件放进 `<Suspense>`，让其他内容先展示：
+
+```tsx
+<Header />
+
+<Suspense fallback={<Skeleton />}>
+  <SlowList />
+</Suspense>
+```
+
+总结一下：
+
+| 场景 | 推荐方式 |
+| --- | --- |
+| 首屏数据 | 服务端组件 + `fetch` |
+| 私密数据 | 服务端组件 |
+| 搜索分页 | URL 参数 + 服务端获取 |
+| 用户交互后加载 | 客户端组件 + `fetch` |
+| 实时同步 | 客户端组件 + 轮询 / WebSocket |
+| 稳定公共数据缓存 | `use cache` / `cacheLife` |
+
+## 更新数据
 
 @See https://nextjs.org/docs/app/getting-started/updating-data
 
@@ -795,122 +852,194 @@ Next.js 提供了 **Server Actions** 来在服务端直接更新数据，但在 
 
 > 温馨提示：了解 Server Actions 的概念即可，无需深入使用。
 
-# 缓存和重新验证
+## 缓存和重新验证
 
-@See https://nextjs.org/docs/app/getting-started/caching-and-revalidating
+@See https://nextjscn.org/docs/app/getting-started/caching-and-revalidating
 
-@See https://nextjs.org/docs/app/guides/caching#request-memoization
+@See https://nextjscn.org/docs/app/guides/caching#request-memoization
 
-相关概念：
+缓存和重新验证解决的是两个问题：
 
-- 缓存（cache）：存储数据请求或计算结果，下次请求相同内容时避免重复请求。
-- 重新验证（revalidate）：当数据变化时，可以通过 API 手段使缓存失效，并重新拉取最新数据，而不需要重建整个站点。
+- **缓存**：相同数据不要每次都重新请求。
+- **重新验证**：数据变了以后，让缓存失效或后台刷新。
 
-在前后端分离的架构下，我们常用 Next.js 向远程 API 发起 fetch 请求获取数据。这时候，合理使用缓存和重新验证机制，既能减少请求次数，又能保证数据新鲜度。
+一句话：**公共稳定数据可以缓存，用户态和实时数据不要缓存。**
 
-默认情况下，Next.js 的 fetch 请求**不会自动缓存**。也就是说，如果你什么都不设置，每次访问都会重新请求最新数据。但你可以显式开启缓存：
+### `fetch` 缓存
 
-```tsx
-await fetch('/api/data', { cache: 'force-cache' })
-```
-
-这样会把请求结果缓存起来，下次相同请求就可以复用。
-
-## 周期刷新
-
-假如你请求的是后台公开接口（比如产品列表或公共资讯），数据不会秒变，但也要定期刷新。这种情况可以使用 next.revalidate：
-
-```tsx
-await fetch('/api/data', { next: { revalidate: 3600 } })
-```
-
-设置为 3600 秒后，Next.js 会返回旧数据给用户，但后台会启动一次重新请求（stale‑while‑revalidate），等拿到后更新缓存。这样既快，又能保持数据不过时。
-
-## revalidateTag
-
-对于某些数据，你想在特定事件发生后（比如用户提交了表单、内容更新）再刷新缓存。这时可以用 **标签机制**：
-
-1. 请求时给数据打标签：
-
-   ```tsx
-   await fetch('/api/user', { next: { tags: ['user'] } })
-   ```
-
-2. 在服务端逻辑里（Server Action 或 Route Handler）触发刷新：
-
-   ```ts
-   import { revalidateTag } from 'next/cache'
-   await revalidateTag('user', 'max')
-   ```
-
-使用 `profile="max"` 的配置时，Next.js 会继续返回旧数据，同时后台去请求新数据。这就是经典的 stale‑while‑revalidate 模型，非常适合 “写完就刷新，但不打断体验” 的场景。
-
-## updateTag
-
-如果你的前端是客户端发起写操作（如创建文章、更新用户信息等），希望用户马上看到最新内容，可以用 updateTag：
+默认情况下，`fetch` 不会缓存响应。如果某个接口是公共且稳定的，可以显式缓存：
 
 ```ts
-import { updateTag } from 'next/cache'
+await fetch("/api/products", {
+  cache: "force-cache",
+});
+```
 
-export async function savePost(data) {
-  await apiCreatePost(data)
-  updateTag('posts')
+适合：商品分类、文章列表、站点配置、公共字典等。
+
+### 周期刷新
+
+如果数据不需要实时，但也不能长期不更新，可以设置重新验证时间：
+
+```ts
+await fetch("/api/products", {
+  next: { revalidate: 3600 },
+});
+```
+
+表示最多缓存 3600 秒，到期后重新获取数据。
+
+### revalidateTag
+
+如果多处页面都依赖同一类数据，可以给请求打标签：
+
+```ts
+await fetch("/api/posts", {
+  next: { tags: ["posts"] },
+});
+```
+
+数据变更后，在 Next.js 的服务端逻辑中刷新这个标签：
+
+```ts
+import { revalidateTag } from "next/cache";
+
+revalidateTag("posts", "max");
+```
+
+`"max"` 表示 stale-while-revalidate：先返回旧缓存，再后台刷新新数据。
+
+在前后端分离项目中，独立后端不能直接调用 `revalidateTag`。如果后端数据更新后需要通知 Next.js，通常做法是让后端请求一个 Next.js Route Handler，再由 Route Handler 调用 `revalidateTag`。
+
+```ts
+// app/api/revalidate/route.ts
+revalidateTag("posts", "max");
+```
+
+### updateTag
+
+`updateTag` 会立即让标签缓存失效，适合“写完马上读到新数据”的场景。
+
+但它只能在 **Server Action** 中使用：
+
+```ts
+"use server";
+
+import { updateTag } from "next/cache";
+
+updateTag("posts");
+```
+
+前后端分离项目通常不需要默认使用 `updateTag`。除非你让 Next.js Server Action 作为 BFF，先调用后端写接口，再调用 `updateTag`。
+
+### revalidatePath
+
+如果只想刷新某个页面或布局路径，可以使用 `revalidatePath`：
+
+```ts
+import { revalidatePath } from "next/cache";
+
+revalidatePath("/dashboard");
+```
+
+适合：后台修改配置后，只刷新某个页面。
+
+### 前后端分离建议
+
+| 场景 | 推荐 |
+| --- | --- |
+| 公共稳定数据 | `force-cache` / `next.revalidate` / Cache Components |
+| 用户态数据 | 不缓存，按请求获取 |
+| 实时数据 | 不缓存，客户端实时同步 |
+| 后端内容更新后刷新缓存 | 后端调用 Next Route Handler，再 `revalidateTag` / `revalidatePath` |
+| Next Server Action 自己发起写操作 | 可用 `updateTag` |
+
+不要为了使用缓存 API 强行引入 Server Actions。前后端分离时，业务写入仍然交给独立后端；Next.js 只负责读取、缓存和必要时刷新自己的缓存。
+
+## 代理
+
+@See https://nextjscn.org/docs/app/api-reference/file-conventions/proxy
+
+`proxy.ts` 是 Next.js 16 中替代 `middleware.ts` 的文件约定。它会在路由渲染前执行，用来做轻量的请求拦截和转发控制。
+
+一句话：**Proxy 是路由前的轻量代理层，不是业务后端。**
+
+### 能做什么？
+
+- `redirect`：重定向到其他页面。
+- `rewrite`：改写到其他路由，但浏览器地址不变。
+- 修改请求头或响应头。
+- 读取或设置 Cookie。
+- 直接返回响应，例如未登录返回 401。
+
+### 基本写法
+
+在项目根目录或 `src` 下创建 `proxy.ts`：
+
+```ts
+import { NextResponse, type NextRequest } from "next/server";
+
+export function proxy(request: NextRequest) {
+  return NextResponse.next();
 }
 ```
 
-updateTag 只能在 Server Action 中调用，一旦触发，它会立即使对应标签的缓存失效。下一个读取这个标签数据的请求将不会读旧数据。
+通过 `matcher` 指定哪些路径会进入 Proxy：
 
-## revalidatePath
-
-有时你只想刷新某一个页面或某个路由，而不是所有同标签的数据。这时候 revalidatePath 就非常简单直接：
-
-```tsx
-import { revalidatePath } from 'next/cache'
-await revalidatePath('/dashboard')
+```ts
+export const config = {
+  matcher: "/dashboard/:path*",
+};
 ```
 
-这个调用会重新验证 /dashboard 这个路径的数据，非常适合做页面级别的手动刷新。
+### 常见场景
 
-## 总结
+#### 登录态拦截
 
-| 缓存模式            | 配置方式                   | 适用场景                               | 数据更新方式   |
-| ------------------- | -------------------------- | -------------------------------------- | -------------- |
-| 静态缓存            | `cache: 'force-cache'`     | 不常变化的数据                         | 构建时固定     |
-| 动态缓存            | `cache: 'no-store'`        | 实时更新的数据                         | 每次请求都刷新 |
-| 增量静态再生成(ISR) | `next: { revalidate: 60 }` | 需要定期更新但可延迟的数据定期重新验证 | 定期重新验证   |
+```ts
+if (!request.cookies.get("token")) {
+  return NextResponse.redirect(new URL("/login", request.url));
+}
+```
 
-- 对于公共、不频繁变化的数据（比如公共列表、公共 API）：使用 force-cache + revalidate，定期后台刷新。
-- 对于用户数据或实时内容：可以选择 no-store，每次都请求最新数据。
-- 对于写操作后想立刻看到更新的数据：在写操作里调用 updateTag。
-- 对于想手动刷新页面数据：在服务端逻辑中使用 revalidatePath。
+#### 路由改写
 
-# 代理
+```ts
+return NextResponse.rewrite(new URL("/dashboard/user", request.url));
+```
 
-@See https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+#### 设置响应头
 
-proxy.ts 文件用于在请求完成前，在服务端执行自定义逻辑。根据请求内容，你可以：
+```ts
+const response = NextResponse.next();
+response.headers.set("x-from-proxy", "true");
+return response;
+```
 
-- 修改响应（rewrite）
-- 重定向（redirect）
-- 修改请求或响应头
-- 直接返回自定义响应
+#### 注意事项
 
-**特点和注意事项**：
+- Proxy 会在路由渲染前执行，命中范围要用 `matcher` 控制好。
+- 不要在 Proxy 中写复杂业务逻辑。
+- 不要把 Proxy 当成统一后端接口代理。
+- 复杂鉴权、数据库操作、写操作，应该放在后端服务、Route Handler 或 Server Action 中。
+- Proxy 默认使用 Node.js Runtime，`runtime` 配置不可用。
 
-1. 执行时机
-   - 在路由渲染之前执行，适合做服务器端逻辑，比如认证、日志记录、重定向处理等。
-2. 独立于渲染代码
-   - Proxy 与页面渲染逻辑分开，不依赖共享模块或全局状态。
-   - 在优化情况下，可以部署到 CDN 以快速处理 rewrite 或 redirect。
-3. 信息传递
-   - 如果需要把信息传递给应用，可以使用 headers、cookies、rewrite、redirect 或 URL 参数。
-4. 文件位置
-   - 放在项目根目录或 src 下，与 pages 或 app 同级。
-   - 如果自定义了 pageExtensions（如 .page.ts），则命名为 proxy.page.ts。
+### 前后端分离建议
 
-简单理解：proxy.ts 就是一个**服务端请求拦截器**，在页面渲染前处理请求，适合做认证、重定向和响应修改，和前端渲染逻辑完全分离。
+在前后端分离项目中，Proxy 主要适合做前端层面的轻量控制：
 
-# 加载UI和流式传输
+| 场景 | 是否适合 Proxy |
+| --- | --- |
+| 未登录跳转登录页 | 适合 |
+| 路由重写、灰度入口、国际化跳转 | 适合 |
+| 给请求或响应加少量 Header | 适合 |
+| 调后端接口做复杂鉴权 | 不适合 |
+| 承载业务 API 代理 | 不适合 |
+| 数据库查询、写入、复杂计算 | 不适合 |
+
+官方也建议不要过度依赖 Proxy，只有在路由前必须拦截请求时再使用。
+
+## 加载UI和流式传输
 
 @See https://nextjs.org/docs/app/api-reference/file-conventions/loading
 
@@ -1059,7 +1188,7 @@ export default async function Page() {
 
 再次刷新页面，可以看到相同的效果，这种方式可以使得我们更细腻话的去控制组件的加载。
 
-# 错误处理
+## 错误处理
 
 @See https://nextjs.org/docs/app/getting-started/error-handling
 
@@ -1206,7 +1335,7 @@ export default async function Page() {
 
 Next.js 使用错误边界来处理未捕获的异常。错误边界捕获子组件中的错误并显示后备 UI，而不是崩溃的组件树。
 
-# 样式
+## 样式
 
 @See https://nextjs.org/docs/app/building-your-application/styling
 
@@ -1217,112 +1346,194 @@ Next.js 使用错误边界来处理未捕获的异常。错误边界捕获子组
 
 在 Tailwind 配置文件中，添加将使用 Tailwind 类名的文件的路径，参考 [这里 >> ](https://nextjs.org/docs/app/building-your-application/styling/tailwind-css#configuring-tailwind)
 
-# 优化
+## 优化
 
-## 固定宽高比
+### 固定宽高比
+
+固定宽高比主要用于避免图片、卡片、视频加载时撑开页面，减少布局抖动。
 
 ```tsx
-<div className="aspect-[16/9] bg-gray-200"></div>
+<div className="aspect-[16/9] w-full bg-gray-200" />
 ```
 
-上面的写法等价于：
+> 注意：`aspect-ratio` 只设置比例，不设置实际尺寸。元素仍然需要宽度或高度。
+
+结合 `next/image` 的 `fill` 使用时，父容器必须有尺寸，并设置 `relative`：
 
 ```tsx
-<div className="bg-gray-200" style={{aspectRatio: '16/9'}}></div>
-```
-
-实际开发中，你可以根据设计稿尺寸来设置，比如默认尺寸是：`1920x560`，可以这样设置：
-
-```tsx
-<div className="aspect-[1920/560] bg-gary-200"></div>
-```
-
-图片填充
-
-```tsx
-<div className="aspect-[1920/560] relative">
-  <Image fill src={"/images/xxx.png"} alt="banner_Image" />
+<div className="relative aspect-[1920/560] w-full">
+  <Image fill src="/images/banner.png" alt="banner" className="object-cover" />
 </div>
 ```
 
-> 温馨提示：需要在容器上添加 `relative` 图片才能正常显示。
-
-值得注意的是，设置宽高比并不是在设置元素尺寸，你还应该设置容器的宽度（或者高度），建设宽高比是 200/100（或者 2/1），容器宽度为 20%，则可以这样设置：
+如果在 `flex` 布局中被文字高度拉伸，可以给图片区域单独套一层固定宽度容器：
 
 ```tsx
-<div className="aspect-[200/100] bg-gray-200 w-[20%] mx-auto"></div>
-```
-
-在实际应用中，比如图文混排，左侧图片右侧文字这种，通常容器设置为 flex 布局，此时如果文本高度高于图片高度，那么你设置的宽高比将不会生效，因为图片会被默认拉伸成同文本高度一致，如下所示：
-
-```tsx
-<div className="container mx-auto flex">
-  <div className="aspect-[200/100] bg-gray-200 shrink-0 mr-8 rounded-md w-[30%]"></div>
-  <div className="flex-1">
-    <p>新华社北京12月9日电 中共中央政治局12月9日召开会议，分析研究2025年经济工作；听取中央纪委国家监委工作汇报，研究部署2025年党风廉政建设和反腐败工作。中共中央总书记习近平主持会议。</p>
-    <p>
-      会议强调，做好明年经济工作，要以习近平新时代中国特色社会主义思想为指导，全面贯彻落实党的二十大和二十届二中、三中全会精神，坚持稳中求进工作总基调，完整准确全面贯彻新发展理念，加快构建新发展格局，扎实推动高质量发展，进一步全面深化改革，扩大高水平对外开放，建设现代化产业体系，更好统筹发展和安全，实施更加积极有为的宏观政策，扩大国内需求，推动科技创新和产业创新融合发展，稳住楼市股市，防范化解重点领域风险和外部冲击，稳定预期、激发活力，推动经济持续回升向好，不断提高人民生活水平，保持社会和谐稳定，高质量完成“十四五”规划目标任务，为实现“十五五”良好开局打牢基础。
-    </p>
+<div className="flex">
+  <div className="w-[30%] shrink-0">
+    <div className="aspect-[4/3]" />
   </div>
+  <div className="flex-1">...</div>
 </div>
 ```
 
-渲染结果：
+### 图片
 
-![](./imgs/nextjs_aspect_1.jpg)
+@See https://nextjscn.org/docs/app/getting-started/images
 
-此时你可以再套一层容器，如下所示：
+@See https://nextjscn.org/docs/app/api-reference/components/image
+
+Next.js 推荐使用 `next/image` 的 `<Image>` 组件。它相比原生 `<img>` 多了几个能力：自动尺寸优化、现代图片格式、懒加载、防止布局偏移、支持远程图片优化。
+
+本地图片可以直接放在 `public` 目录，通过 `/` 引用：
 
 ```tsx
-<div className="container mx-auto flex">
-  <div className="w-[30%]">
-    <div className="aspect-[200/100] bg-gray-200 shrink-0 mr-8 rounded-md"></div>
-  </div>
-  <div className="flex-1">
-    <p>新华社北京12月9日电 中共中央政治局12月9日召开会议，分析研究2025年经济工作；听取中央纪委国家监委工作汇报，研究部署2025年党风廉政建设和反腐败工作。中共中央总书记习近平主持会议。</p>
-    <p>
-      会议强调，做好明年经济工作，要以习近平新时代中国特色社会主义思想为指导，全面贯彻落实党的二十大和二十届二中、三中全会精神，坚持稳中求进工作总基调，完整准确全面贯彻新发展理念，加快构建新发展格局，扎实推动高质量发展，进一步全面深化改革，扩大高水平对外开放，建设现代化产业体系，更好统筹发展和安全，实施更加积极有为的宏观政策，扩大国内需求，推动科技创新和产业创新融合发展，稳住楼市股市，防范化解重点领域风险和外部冲击，稳定预期、激发活力，推动经济持续回升向好，不断提高人民生活水平，保持社会和谐稳定，高质量完成“十四五”规划目标任务，为实现“十五五”良好开局打牢基础。
-    </p>
-  </div>
+import Image from "next/image";
+
+<Image src="/profile.png" alt="profile" width={500} height={500} />;
+```
+
+远程图片必须提供 `width` / `height`，并在 `next.config.ts` 中配置允许的域名：
+
+```ts
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "example.com",
+      },
+    ],
+  },
+};
+```
+
+使用 `fill` 时，父容器要有尺寸：
+
+```tsx
+<div className="relative aspect-[16/9]">
+  <Image fill src="/cover.png" alt="cover" sizes="100vw" />
 </div>
 ```
 
-渲染结果：
+图片优化要点：
 
-![](./imgs/nextjs_aspect_2.jpg)
+- 所有图片都要写有意义的 `alt`。
+- 已知尺寸时优先使用 `width` / `height`。
+- 铺满容器时使用 `fill` + `sizes`。
+- 远程图片的 `remotePatterns` 尽量写具体，避免放开整个域名。
 
-## 图片
+### 字体
 
-@See https://nextjs.org/docs/app/building-your-application/optimizing/image
+@See https://nextjscn.org/docs/app/getting-started/fonts
 
-@See https://nextjs.org/docs/app/api-reference/components/image
+Next.js 推荐使用 `next/font` 加载字体。它会自动自托管字体，减少外部请求，并降低字体加载导致的布局偏移。
 
-## 字体
+Google 字体：
 
-@See https://nextjs.org/docs/app/building-your-application/optimizing/fonts
+```tsx
+import { Geist } from "next/font/google";
 
-## 元数据
+const geist = Geist({ subsets: ["latin"] });
 
-@See https://nextjs.org/docs/app/building-your-application/optimizing/metadata
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={geist.className}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
 
-## 静态资源
+本地字体：
 
-@See https://nextjs.org/docs/app/building-your-application/optimizing/static-assets
+```tsx
+import localFont from "next/font/local";
 
-# 配置
+const myFont = localFont({
+  src: "./my-font.woff2",
+});
+```
 
-## 环境变量
+建议：优先使用可变字体；全局字体放在 Root Layout 中。
 
-@See https://nextjs.org/docs/app/building-your-application/configuring/environment-variables
+### 元数据
 
-Next.js 内置了对环境变量的支持，因为 Next.js 是一个全栈框架，所以就区分了服务端环境变量和客户端环境变量；使用环境变量有两种方式：
+@See https://nextjscn.org/docs/app/getting-started/metadata-and-og-images
 
-1. 通过 `.env` 问见加载环境变量
-2. 通过使用 `NEXT_PUBLIC_` 前缀来捆绑浏览器的环境变量
+Metadata API 用来生成页面的 `<head>` 信息，主要用于 SEO 和社交分享。
 
-### .env 文件中加载环境变量
+静态元数据：
 
-Next.js 内置支持从 `.env` 文件加载环境变量到 `process.env` 中的这个过程。我们在项目根目录下建立一个 `.env` 文件（注意是根目录，不是 `/src` 目录）
+```tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Blog",
+  description: "A blog built with Next.js",
+};
+```
+
+动态元数据：
+
+```tsx
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  return {
+    title: post.title,
+    description: post.description,
+  };
+}
+```
+
+注意：
+
+- `metadata` 和 `generateMetadata` 只支持服务端组件。
+- `favicon.ico`、`robots.txt`、`sitemap.xml`、`opengraph-image` 等可以使用文件约定。
+- 动态页面的元数据可以流式生成，不阻塞主要 UI 渲染。
+
+### 静态资源
+
+@See https://nextjscn.org/docs/app/api-reference/file-conventions/public-folder
+
+静态资源放在项目根目录的 `public` 文件夹中，可以通过根路径 `/` 访问。
+
+```txt
+public/avatar.png -> /avatar.png
+```
+
+示例：
+
+```tsx
+<Image src="/avatar.png" alt="avatar" width={64} height={64} />
+```
+
+注意：
+
+- `public` 适合放图片、字体、下载文件等静态资源。
+- `public` 下的文件不会被安全地长期缓存，默认缓存头是 `Cache-Control: public, max-age=0`。
+- `favicon.ico`、`robots.txt`、`sitemap.xml` 等元数据文件，优先使用 `app` 目录下的特殊文件约定。
+
+## 配置
+
+### 环境变量
+
+@See https://nextjscn.org/docs/app/guides/environment-variables
+
+Next.js 内置支持环境变量，核心就两类：
+
+| 类型 | 说明 |
+| --- | --- |
+| 服务端环境变量 | 默认只在服务端可用，例如数据库地址、密钥、Token |
+| 客户端环境变量 | 必须以 `NEXT_PUBLIC_` 开头，会被打包进浏览器 JS |
+
+一句话：**不加 `NEXT_PUBLIC_` 就只给服务端用，加了就会暴露给浏览器。**
+
+#### .env 文件中加载环境变量
+
+在项目根目录创建 `.env` 文件，注意不是 `/src` 目录。
 
 ```ini
 DB_HOST=localhost
@@ -1330,140 +1541,913 @@ DB_USER=admin
 DB_PASS=123456
 ```
 
-现在就可以在服务端组件或者路由处理程序中通过 `process.env` 获取到该值：
-
-**路由处理程序**
+在服务端组件、Route Handler、Server Action 中都可以读取：
 
 ```ts
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  const dbConfig = {
-    host: process.env.DB_HOST,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-  }
-  console.log('DB_CONFIG >>> ', dbConfig);
-  return NextResponse.json({ status: 'ok' });
-}
+const host = process.env.DB_HOST;
+const user = process.env.DB_USER;
+const pass = process.env.DB_PASS;
 ```
 
-在浏览器中请求 `http://localhost:3000/api` 后，页面展示内容如下：
+注意：
 
-```
-{
-    "status": "ok"
-}
-```
+- `.env*` 文件应放在项目根目录。
+- 不要把包含密钥的 `.env.local` 提交到仓库。
+- 如果要在 Next.js 运行时之外加载环境变量，例如 ORM 配置、测试配置，可以使用 `@next/env`。
 
-请求后就能看到终端打印的环境变量的结果：
+```ts
+import { loadEnvConfig } from "@next/env";
 
-```shell
- ✓ Compiled /api in 83ms (318 modules)
-DB_CONFIG >>>  { host: 'localhost', username: 'admin', password: '123456' }
+loadEnvConfig(process.cwd());
 ```
 
-**服务端组件**
+环境变量支持引用其他变量：
 
-这里就直接在 `/app` 目录下的 `page.tsx` 中来演示，代码如下
-
-```tsx
-console.log("process.env.DB_HOST", process.env.DB_HOST);
-console.log("process.env.DB_USER", process.env.DB_USER);
-console.log("process.env.DB_PASS", process.env.DB_PASS);
+```ini
+TWITTER_USER=nextjs
+TWITTER_URL=https://x.com/$TWITTER_USER
 ```
 
-在浏览器访问 `http://localhost:3000/` 后，终端打印效果如下：
+如果值里真的需要 `$`，需要写成 `\$`。
 
-```shell
-process.env.DB_HOST localhost
-process.env.DB_USER admin
-process.env.DB_PASS 123456
+#### 浏览器中获取环境变量
+
+如果变量需要在浏览器中使用，必须加 `NEXT_PUBLIC_` 前缀：
+
+```ini
+NEXT_PUBLIC_PLATFORM=PC
 ```
 
-> 提示：如果 `.env` 文件不足以满足你的要求，Next.js 为了兼容其各场景的灵活性，提供了 @next/env 包来扩展！
-
-### 浏览器中获取环境变量
-
-Next.js 是一个全栈框架，自然也考虑到了浏览器环境的时候如何获取环境变量，也没有过多的文件配置，就是使用 `NEXT_PUBLIC_` 为前缀的环境变量就是浏览器环境中可以使用的。
-
-> 为什么要加前缀呢？
->
-> 因为 Next.js 为了让浏览器可以获取环境变量中的值，在构建的时候，将值内联到客户端的 js bundle 中，替换掉所有硬编码使用 `process.env.[variable]` 的地方。
-
-实操一下：在 `.env` 文件中添加 `NEXT_PUBLIC_PLATFORM=PC` 然后在客户端组件中使用，客户端代码如下：
-
-*`src/ui/Client.tsx`*
+客户端组件中可以读取：
 
 ```tsx
 "use client";
-export default function Client() {
-  console.log("NEXT_PUBLIC_PLATFORM：", process.env.NEXT_PUBLIC_PLATFORM);
-  return <div>This is Client Component</div>;
-}
+
+console.log(process.env.NEXT_PUBLIC_PLATFORM);
 ```
 
-接下来，请按如下步骤操作：
+注意：`NEXT_PUBLIC_` 会在 `next build` 时被内联到客户端 bundle 中。构建完成后，浏览器里的值不会再随着服务器环境变量变化。
 
-1. 在 `/app/page.tsx` 中引入 `<Client />` 组件
-2. 接着在终端运行 `pnpm build` 构建项目
-3. 构建完成之后使用命令 `pnpm start` 启动构建后的产物
-
-启动之后，在终端查看访问链接，复制粘贴到浏览器中，看看是否打印了我们想要的环境变量：
-
-```shell
-NEXT_PUBLIC_PLATFORM： PC
-```
-
-可见，是打印了的，但是要注意！**动态查找的值是不会被内联**，比如：
+下面这种动态读取不会被内联：
 
 ```tsx
-// 使用了变量，不会被内联，不会生效
 const key = "NEXT_PUBLIC_PLATFORM";
-const val = process.env[key];
+const value1 = process.env[key];
 
-// 使用了变量，不会被内联，不会生效
 const env = process.env;
-const val = env.NEXT_PUBLIC_PLATFORM;
+const value2 = env.NEXT_PUBLIC_PLATFORM;
 ```
 
-### 默认环境变量
+如果浏览器需要运行时环境变量，不要依赖 `NEXT_PUBLIC_`，而是通过接口返回。
 
-在开发过程中，通常一个 `.env` 文件就够用了。但有时候你可能还需要针对不同的环境去加载不同的配置，比如：开发环境（`.env.development`）、生产环境（`.env.production`）、所有环境（`.env`）。
+#### 默认环境变量
 
-如果均未在 `.env` 相关文件中配置环境变量，当执行 `next dev` 的时候，Next.js 会自动给 `NODE_DEV` 赋值 `development`，其他命令则会赋值 `production`。
+常见文件：
 
-> 提示：需要注意的是 NODE_ENV 的值：只允许值为 `production`、`development` 和 `test`。
+| 文件 | 说明 |
+| --- | --- |
+| `.env` | 所有环境默认值 |
+| `.env.local` | 本地覆盖，通常不提交 |
+| `.env.development` | 开发环境 |
+| `.env.production` | 生产环境 |
+| `.env.test` | 测试环境 |
 
-在项目开发过程中一定要谨慎 `.env` 的相关文件，尽可能将 `.env` 相关文件添加到 `.gitignore` 文件中，因为这些都是机密信息。
+`NODE_ENV` 只允许三个值：`development`、`production`、`test`。
 
-### 测试环境的环境变量
+如果没有手动设置，`next dev` 会使用 `development`，其他命令通常使用 `production`。
 
-有了开发环境和生产环境外，Next.js还第三个选项——**测试环境**；测试环境用于在使用测试工具如 Jest 或 Cypress 时，设置特定的环境变量。要配置测试环境，只需创建一个名为 `.env.test` 的文件，该文件中的值将在测试环境中使用。
+#### 测试环境的环境变量
 
-需要注意的是，测试环境不会加载 `.env.local` 中的值。这是为了确保每个人都能产生相同的测试结果。这些默认值将在 `NODE_ENV` 设置为 `test` 时使用。
+测试环境使用 `.env.test`。为了保证测试结果一致，`NODE_ENV=test` 时不会加载 `.env.local`。
 
-### 环境变量加载顺序
+#### 环境变量加载顺序
 
-按顺序在以下位置查找环境变量，一旦找到变量就停止。
+Next.js 会按顺序查找环境变量，找到后停止：
 
-- `process.env`
-- `.env.$(NODE_ENV).local`
-- `.env.local`（当 `NODE_ENV` 是 `test` 的时候不会查找）
-- `.env.$(NODE_ENV)`
-- `.env`
-
-举个例子来辅助理解，如果你在 `.env.development.local` 和 `.env` 中设置了 `NODE_ENV` 为 `development`，按照这个顺序，最终会使用 `.env.development.local` 中的值。
+1. `process.env`
+2. `.env.$(NODE_ENV).local`
+3. `.env.local`（`NODE_ENV=test` 时不加载）
+4. `.env.$(NODE_ENV)`
+5. `.env`
 
 ## 端口
 
-@See https://nextjs.org/docs/app/api-reference/cli/next
+@See https://nextjscn.org/docs/app/api-reference/cli/next
 
-指定端口和hostname
+默认端口是 `3000`，可以通过 `-p` / `--port` 指定端口：
 
 ```shell
-next dev --port=6969 --hostname=172.20.51.212
+next dev -p 6969
 ```
+
+也可以指定主机名：
+
+```shell
+next dev -p 6969 -H 0.0.0.0
+```
+
+生产启动同理：
+
+```shell
+next start -p 6969
+```
+
+也可以使用 `PORT` 环境变量：
+
+```shell
+PORT=6969 next dev
+```
+
+注意：`PORT` 不能写在 `.env` 里，因为 HTTP 服务启动发生在应用代码初始化之前。
+
+## 部署
+
+@See https://nextjscn.org/docs/app/getting-started/deploying
+
+# 指南
+
+## 国际化 next-intl
+
+![](./imgs/i18n-intl.gif)
+
+### 概述
+
+@See https://nextjs.org/docs/app/guides/internationalization
+
+@See https://github.com/amannn/next-intl/tree/main/examples/example-app-router
+
+[next-intl ↪](https://next-intl.dev/) 使用 **ICU Message Format** 语法，与 React 组件天然兼容。 支持变量替换、复数、选择分支、HTML 片段等多场景。
+
+### 准备
+
+#### 目录结构
+
+```
+src
+├── next.config.ts
+├── app
+│   ├── [locale]
+│   │   ├── (home)
+│   │   │   └── page.tsx
+│   │   ├── [...rest]
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── not-found.tsx
+│   └── page.tsx
+├── components
+│   ├── features
+│   │   ├── ClientComp.tsx
+│   │   ├── LanguageSwitcher.tsx
+│   │   └── ServerComp.tsx
+│   ├── layouts
+│   └── ui
+├── i18n
+│   ├── messages           # 通过脚本输出 —— pnpm i18n:json
+│   │   ├── en-US.json
+│   │   ├── es.json
+│   │   ├── pt.json
+│   │   └── zh-CN.json
+│   ├── navigation.ts
+│   ├── request.ts
+│   └── routing.ts
+└── proxy.ts
+```
+
+#### 安装依赖
+
+```shell
+$ pnpm add next-intl
+$ pnpm add xlsx -D
+```
+
+#### 翻译准备
+
+假设支持 `zh-CN` `en-US` `pt` `es`，传统模式下翻译经由专人维护一个 Excel 表，大致如下：
+
+| key             | zh-CN                                  | en-US                                                       | pt                                                 | es                                                    |
+| --------------- | -------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------- |
+| title           | i18n 学习指南                          | i18n Study Guide                                            | Guia de Estudo de i18n                             | Guía de Estudio de i18n                               |
+| profile.tips    | 会员已到期，请充值                     | Membership has expired, please renew.                       | A associação expirou, por favor renove.            | La membresía ha expirado, por favor renueve.          |
+| profile.reward1 | 恭喜您，获得 {point} 个积分            | Congratulations! You’ve earned {point} points.              | Parabéns! Você ganhou {point} pontos.              | ¡Felicidades! Has ganado {point} puntos.              |
+| profile.reward2 | 恭喜您，获得 \<tag>{point}\</tag> 积分 | Congratulations! You’ve earned \<tag>{point}\</tag> points. | Parabéns! Você ganhou \<tag>{point}\</tag> pontos. | ¡Felicidades! Has ganado \<tag>{point}\</tag> puntos. |
+
+> 💡 翻译人员可以使用[Crowdin](https://crowdin.com/teams/engineering)等本地化管理解决方案协作处理消息。
+
+此时，可以通过脚本工具将 Excel 转成 json，这里给大家简单分享一个可以满足基本需求的脚本。
+
+```shell
+$ tree scripts
+scripts
+└── excel2json
+    ├── index.ts          # 执行文件
+    └── translations.xlsx # 翻译源文件
+```
+
+> `index.ts`
+
+```ts
+/**
+ * src/scripts/excel2json/index.ts
+ * Excel → JSON 翻译导出脚本
+ * 安装依赖：pnpm add -D xlsx
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import XLSX from 'xlsx';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// === 1. 可配置变量 ===
+const EXCEL_FILE_NAME = 'translations.xlsx';
+const SHEET_NAME = 'Sheet1';
+const ROOT = path.resolve(__dirname, '../../');
+const INPUT_DIR = path.join(ROOT, '/scripts/excel2json');
+const OUTPUT_DIR = path.join(ROOT, '/src/i18n/messages');
+
+// === 2. 类型定义 ===
+interface ExcelRow {
+  /** 翻译 key */
+  key?: string;
+  /** 备注（可选） */
+  remark?: string;
+  /** 语言列 */
+  [lang: string]: string | undefined;
+}
+
+type NestedObject = {
+  [key: string]: string | NestedObject;
+};
+
+// === 3. 读取 Excel 文件 ===
+const excelPath = path.join(INPUT_DIR, EXCEL_FILE_NAME);
+console.log(`📂 读取 Excel 文件: ${excelPath}`);
+
+const workbook = XLSX.readFile(excelPath);
+const sheet = SHEET_NAME ? workbook.Sheets[SHEET_NAME] : workbook.Sheets[workbook.SheetNames[0]];
+
+if (!sheet) throw new Error(`❌ 找不到 Excel sheet: ${SHEET_NAME}`);
+console.log(`📄 使用 Sheet: ${SHEET_NAME || workbook.SheetNames[0]}`);
+
+const rawData: ExcelRow[] = XLSX.utils.sheet_to_json(sheet);
+console.log(`🔑 Excel 共读取 ${rawData.length} 条记录`);
+
+// === 4. 获取语言列 ===
+const header: string[] = Object.keys(rawData[0] || {}).filter(
+  (key) => key !== 'key' && key !== 'remark',
+);
+console.log(`🌐 发现语言列: ${header.join(', ')}`);
+
+// === 5. 递归写入对象属性 ===
+function setNested(obj: NestedObject, keyPath: string, value: string) {
+  const keys = keyPath.split('.');
+  let current: NestedObject = obj;
+  keys.forEach((k, i) => {
+    if (i === keys.length - 1) {
+      current[k] = value;
+    } else {
+      current[k] = (current[k] as NestedObject) || {};
+      current = current[k] as NestedObject;
+    }
+  });
+}
+
+// === 6. 初始化结果对象和计数器 ===
+const result: Record<string, NestedObject> = {};
+const langCounts: Record<string, number> = {};
+header.forEach((lang) => {
+  result[lang] = {};
+  langCounts[lang] = 0;
+});
+
+// === 7. 处理每一行数据 ===
+rawData.forEach((row) => {
+  const key = row.key?.toString().trim();
+  if (!key) return; // 没有 key 整行跳过
+
+  header.forEach((lang) => {
+    let value = row[lang];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      value = String(value).trim();
+      setNested(result[lang], key, value);
+      langCounts[lang] += 1; // 只统计有值的翻译
+    }
+  });
+});
+
+// === 8. 输出 JSON 文件并显示提示 ===
+if (!fs.existsSync(OUTPUT_DIR)) {
+  console.log(`🧹 创建输出目录: ${OUTPUT_DIR}`);
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+} else {
+  console.log(`🧹 清空输出目录下文件: ${OUTPUT_DIR}`);
+  const files = fs.readdirSync(OUTPUT_DIR);
+  files.forEach((file) => {
+    const filePath = path.join(OUTPUT_DIR, file);
+    if (fs.lstatSync(filePath).isFile()) {
+      fs.unlinkSync(filePath); // 删除文件
+    }
+  });
+}
+
+header.forEach((lang) => {
+  const filePath = path.join(OUTPUT_DIR, `${lang}.json`);
+  fs.writeFileSync(filePath, JSON.stringify(result[lang], null, 2), 'utf8');
+  console.log(`✅ [${lang}] 文件生成: ${filePath}，共 ${langCounts[lang]} 条有效翻译`);
+});
+
+console.log(`🎉 转换完成！共生成 ${header.length} 个语言文件`);
+console.log(`📂 输出目录: ${OUTPUT_DIR}`);
+
+```
+
+添加 scripts 命令：
+
+```json
+{
+  "i18n:json": "tsx scripts/excel2json/index.ts"
+}
+```
+
+执行脚本命令：`pnnpm i18n:json` 即可生成对应的语言 json 文件 — `src/i18n/locales/...`
+
+### 实现
+
+1、在 `next.config.ts` 中集成插件
+
+```ts
+import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactCompiler: true,
+  reactStrictMode: false,
+};
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);
+```
+
+2、路由配置
+
+@See https://next-intl.dev/docs/routing/configuration
+
+> `i18n/routing.ts`
+
+```ts
+/**
+ * i18n 路由配置
+ * @see https://next-intl.dev/docs/routing/configuration
+ */
+
+import { defineRouting } from "next-intl/routing";
+
+// -- 定义支持的语言环境和默认语言环境
+export const locales = ["zh-CN", "en-US", "pt", "es"] as const;
+export type Locale = (typeof locales)[number];
+
+export const defaultLocale = "zh-CN";
+
+export const routing = defineRouting({
+  // 支持的语言（如果要依赖于后端接口，或动态获取，需要在中间件中处理）
+  locales,
+  // 默认语言
+  defaultLocale,
+  // 语言前缀
+  localePrefix: 'as-needed',
+  // 禁用自动语言检测，当没有语言前缀时始终使用默认语言
+  localeDetection: false,
+});
+```
+
+3、设置代理
+
+@See https://next-intl.dev/docs/routing/middleware
+
+```ts
+// src/proxy.ts
+import createMiddleware from 'next-intl/middleware';
+import { NextRequest } from 'next/server';
+
+import { routing } from './i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
+
+export default async function proxy(request: NextRequest) {
+  return intlMiddleware(request);
+}
+export const config = {
+  // Match all pathnames except for
+  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
+  // - … the ones containing a dot (e.g. `favicon.ico`)
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)',
+};
+
+```
+
+4、设置导航 API
+
+@See https://next-intl.dev/docs/routing/navigation
+
+> `i18n/navigation.ts`
+
+```ts
+import { createNavigation } from 'next-intl/navigation';
+
+import { routing } from './routing';
+
+// Lightweight wrappers around Next.js' navigation
+// APIs that consider the routing configuration
+export const { Link, redirect, usePathname, useRouter, getPathname } = createNavigation(routing);
+```
+
+5、请求配置
+
+> `i18n/request.ts`
+
+```ts
+import { hasLocale } from 'next-intl';
+import { getRequestConfig } from 'next-intl/server';
+
+import { routing } from './routing';
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  // Typically corresponds to the `[locale]` segment
+  const requested = await requestLocale;
+  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+
+  return {
+    locale,
+    messages: (await import(`./messages/${locale}.json`)).default,
+  };
+});
+```
+
+6、语言路由布局，把所有现有的布局和页面移到 `[locale]` 部分中：
+
+```tsx
+// src/app/layout.tsx
+// Since we have a root `not-found.tsx` page, a layout file
+// is required, even if it's just passing children through.
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return children;
+}
+```
+
+
+```tsx
+// src/app/[locale]/layout.tsx
+import type { Metadata, Viewport } from 'next';
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+
+import '@/app/globals.css';
+import { routing } from '@/i18n/routing';
+import { cn } from '@/lib/class-helpers';
+import { geistMono } from '@/lib/fonts';
+
+export const runtime = 'edge';
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+export const metadata: Metadata = {
+  title: 'Create Next App',
+  description: 'Generated by create next app',
+};
+
+export default async function RootLayout({
+  children,
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: { locale: string };
+}>) {
+  const { locale } = await params;
+
+  // Ensure that the incoming `locale` is valid
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  // Providing all messages to the client
+  // side is the easiest way to get started
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale}>
+      <body className={cn('antialiased', geistMono.variable)}>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+
+```
+
+```tsx
+// src/app/[locale]/[...rest]/page.tsx
+import { notFound } from 'next/navigation';
+
+export default function CatchAllPage() {
+  notFound();
+}
+```
+
+```tsx
+// src/app/page.tsx
+import { redirect } from 'next/navigation';
+
+import { routing } from '@/i18n/routing';
+
+export default function RootPage() {
+  redirect(`/${routing.defaultLocale}`);
+}
+```
+
+7、使用翻译
+
+```tsx
+// src/app/[locale]/(home)/page.tsx
+import ClientComp from '@/components/features/ClientComp';
+import LanguageSwitcher from '@/components/features/LanguageSwitcher';
+import ServerComp from '@/components/features/ServerComp';
+
+export default function HomePage() {
+  return (
+    <div className="flex flex-col items-center gap-4 p-4">
+      <LanguageSwitcher />
+      <div className="flex items-start gap-4">
+        <ClientComp />
+        <ServerComp />
+      </div>
+    </div>
+  );
+}
+
+```
+
+```tsx
+// src/components/features/ClientComp.tsx
+'use client';
+import { useTranslations } from 'next-intl';
+
+export default function ClientComp() {
+  const t = useTranslations();
+  const point = 6000;
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <div>客户端组件</div>
+      <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
+      <div className="w-full space-y-2 bg-gray-200 p-4 text-black">
+        {/* 1. 没有变量 */}
+        <div>{t('title')}</div>
+        <div>{t('profile.tips')}</div>
+
+        {/* 2. 存在变量（插值） */}
+        <div>{t('profile.reward1', { point })}</div>
+
+        {/* 3. 自定义渲染 */}
+        <div>
+          {t.rich('profile.reward2', {
+            tag: (children) => <span className="font-bold text-red-500">{children}</span>,
+            point,
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+```tsx
+// src/components/features/ServerComp.tsx
+import { getTranslations } from 'next-intl/server';
+
+export default async function ServerComp() {
+  const t = await getTranslations();
+  const point = 6000;
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <div>服务端组件</div>
+      <div>{process.env.NEXT_PUBLIC_API_BASE_URL}</div>
+      <div className="w-full space-y-2 bg-gray-200 p-4 text-black">
+        {/* 1. 没有变量 */}
+        <div>{t('title')}</div>
+        <div>{t('profile.tips')}</div>
+
+        {/* 2. 存在变量（插值） */}
+        <div>{t('profile.reward1', { point })}</div>
+
+        {/* 3. 自定义渲染 */}
+        <div>
+          {t.rich('profile.reward2', {
+            tag: (children) => <span className="font-bold text-red-500">{children}</span>,
+            point,
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+8、切换语言
+
+```tsx
+// src/components/features/LanguageSwitcher.tsx
+'use client';
+
+import { useState } from 'react';
+
+import { useLocale } from 'next-intl';
+
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { clsx } from '@/lib/class-helpers';
+
+/**
+ * LanguageSwitcher 组件
+ *
+ * 功能：
+ * - 显示可用语言列表，每个按钮带国旗
+ * - 当前选中语言高亮
+ * - 点击按钮切换语言，使用 router.replace 替换当前 URL，不增加历史记录
+ *
+ * 数据依赖：
+ * - routing.locales: 项目支持的语言列表
+ * - routing.defaultLocale: 默认语言
+ *
+ * 用法：
+ * <LanguageSwitcher />
+ *
+ * 备注：
+ * - 使用了 clsx 工具函数来处理 Tailwind 类名动态拼接
+ */
+
+// 语言列表直接包含国旗
+const langs = [
+  { code: 'zh-CN', label: '🇨🇳 Chinese' },
+  { code: 'en-US', label: '🇺🇸 English' },
+  { code: 'pt', label: '🇧🇷 Português' },
+  { code: 'es', label: '🇪🇸 Español' },
+];
+
+export default function LanguageSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
+
+  const [loading, setLoading] = useState(false);
+
+  const onSwitchLocale = (locale: string) => {
+    if (loading) return;
+    if (locale === currentLocale) return;
+    setLoading(true);
+    router.replace(pathname, { locale });
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {langs.map((locale) => {
+        const isActive = locale.code === currentLocale;
+        return (
+          <button
+            key={locale.code}
+            type="button"
+            onClick={() => onSwitchLocale(locale.code)}
+            className={clsx(
+              'cursor-pointer rounded border px-3 py-1.5 text-sm transition-colors',
+              isActive
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100',
+            )}
+          >
+            {locale.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+```
+
+### 扩展
+
+1. 关于多语言下处理 404 和 Error 的坑，请参考 [这里 ↪](https://github.com/amannn/next-intl/discussions/329)
+
+2. VS Code 插件扩展：[i18n Ally ↪](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally)，配置如下：
+
+   ```json
+   // i18n-ally 配置
+   "i18n-ally.sourceLanguage": "en",
+   "i18n-ally.displayLanguage": "zh-CN",
+   "i18n-ally.localesPaths": ["src/i18n/messages"],
+   "i18n-ally.pathMatcher": "{locale}.json",
+   "i18n-ally.enabledFrameworks": ["next-intl", "general"],
+   "i18n-ally.keystyle": "nested"
+   ```
+
+## PWA
+
+@See https://nextjs.org/docs/app/guides/progressive-web-apps
+
+PWA（Progressive Web App，渐进式网页应用）可以让网站具备接近 App 的体验，例如：添加到桌面、离线访问、后台缓存、推送通知等。
+
+对于博客项目，PWA 最实用的能力通常是：
+
+- 可以安装到桌面或手机主屏幕。
+- 断网时显示一个友好的离线页面。
+- 缓存部分静态资源，提升二次访问体验。
+
+先记住一句话：**manifest 负责“看起来像 App”，Service Worker 负责“离线和缓存”。**
+
+### 创建 Web 应用程序清单
+
+Next.js 使用 App Router 内置支持创建 [Web 应用程序清单 ↪](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps/Manifest)。
+
+> `app/manifest.ts`
+
+```ts
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Leo Blog",
+    short_name: "Blog",
+    description: "A blog built with Next.js",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#fff",
+    theme_color: "#fff",
+    icons: [
+      {
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+  };
+}
+```
+
+常用字段说明：
+
+| 字段 | 作用 |
+| --- | --- |
+| `name` | 应用完整名称 |
+| `short_name` | 桌面图标下显示的短名称 |
+| `start_url` | 打开 PWA 时进入的页面 |
+| `display` | `standalone` 表示像独立 App 一样打开 |
+| `theme_color` | 浏览器 UI 主题色 |
+| `icons` | 安装到桌面时使用的图标 |
+
+> **提示**：可以通过 [网站图标生成器 ↪](https://realfavicongenerator.net/) 生成不同尺寸的图标。
+
+### 创建 Service Worker
+
+Service Worker 放在 `public/sw.js`，浏览器会通过 `/sw.js` 访问它。
+
+下面是一个适合博客项目的简化版本：只处理离线兜底，不做复杂缓存策略。
+
+```ts
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("blog-cache-v1").then((cache) => {
+      return cache.addAll(["/offline"]);
+    })
+  );
+
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode !== "navigate") return;
+
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match("/offline");
+    })
+  );
+});
+```
+
+这段代码的意思是：
+
+- 安装时缓存 `/offline` 页面。
+- 页面导航请求正常走网络。
+- 如果断网或请求失败，就展示离线页。
+
+### 创建离线页面
+
+> `app/offline/page.tsx`
+
+```tsx
+export default function OfflinePage() {
+  return (
+    <main>
+      <h1>当前处于离线状态</h1>
+      <p>请检查网络连接后再刷新页面。</p>
+    </main>
+  );
+}
+```
+
+### 注册 Service Worker
+
+Service Worker 需要在浏览器中注册，因此要写成客户端组件。
+
+> `app/pwa-register.tsx`
+
+```tsx
+"use client";
+
+import { useEffect } from "react";
+
+export function PWARegister() {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+    }
+  }, []);
+
+  return null;
+}
+```
+
+在 `app/layout.tsx` 中引入：
+
+```tsx
+import { PWARegister } from "./pwa-register";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="zh-CN">
+      <body>
+        {children}
+        <PWARegister />
+      </body>
+    </html>
+  );
+}
+```
+
+### 推送通知
+
+官方文档也介绍了 Web Push。博客项目一般可以先不做，除非有这些需求：
+
+- 新文章发布后提醒订阅用户。
+- 评论回复后提醒用户。
+- 站点需要类似 App 的通知能力。
+
+推送通知需要用户授权、Push Subscription、服务端保存订阅信息，并由服务端发送通知，复杂度比普通 PWA 安装和离线缓存高很多。
+
+### 测试 PWA
+
+💡 **Tip**：要测试 PWA 是否生效：
+
+1. 运行生产环境。
+
+   ```shell
+   pnpm build
+   pnpm start
+   ```
+
+2. 浏览器访问站点。
+
+3. 打开 **DevTools → Application → Manifest**，检查名称、图标、主题色。
+
+4. 打开 **DevTools → Application → Service Workers**，检查 `/sw.js` 是否注册成功。
+
+5. 切换到离线模式，刷新页面，确认是否显示 `/offline` 页面。
+
+6. 使用 Lighthouse 检查 PWA 基础项。
+
+注意：PWA 通常要求 HTTPS，`localhost` 开发环境除外。
 
 # 扩展
 
@@ -1478,14 +2462,3 @@ openssl rand -base64 32
 @See https://www.swiperjs.net/
 
 > 提示：在 nextjs 中使用 Swiper，唯一需要注意的就是一定要添加 `use client`  作为客户端组件使用。
-
-# 部署
-
-
-
-
-
-
-
-
-
