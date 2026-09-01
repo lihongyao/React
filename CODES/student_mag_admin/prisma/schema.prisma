@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client" // Prisma 7 的 Client 生成器
+  output   = "../src/generated/prisma" // 相对于 prisma/schema.prisma
+}
+
+datasource db {
+  provider = "postgresql" // 使用 PostgreSQL
+}
+
+// 学生状态由枚举约束，避免写入任意字符串
+enum StudentStatus {
+  ACTIVE
+  SUSPENDED
+  GRADUATED
+}
+
+// 班级
+model SchoolClass {
+  id        Int       @id @default(autoincrement()) // 自增主键
+  name      String // 班级名称，例如“1班”
+  grade     Int // 年级，例如 2026
+  students  Student[] // 一个班级对应多个学生
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([grade, name]) // 同一年级下班级名不能重复
+}
+
+// 学生
+model Student {
+  id            Int           @id @default(autoincrement()) // 自增主键
+  studentNo     String        @unique // 学号，必须唯一
+  name          String
+  email         String        @unique // 邮箱，必须唯一
+  phone         String? // ? 表示可选字段
+  birthDate     DateTime?
+  status        StudentStatus @default(ACTIVE) // 默认在读
+  schoolClassId Int? // 未分班时为空
+  schoolClass   SchoolClass?  @relation(fields: [schoolClassId], references: [id], onDelete: SetNull) // 删除班级时保留学生
+  enrollments   Enrollment[] // 一个学生可以有多条选课记录
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([schoolClassId]) // 加速按班级查询
+  @@index([status]) // 加速按状态查询
+}
+
+// 课程
+model Course {
+  id          Int          @id @default(autoincrement()) // 自增主键
+  code        String       @unique // 课程编码，必须唯一
+  name        String
+  credits     Int          @default(1)
+  enrollments Enrollment[] // 一门课程可以被多个学生选择
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// 选课中间模型，同时保存成绩和选课时间
+model Enrollment {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  courseId   Int
+  score      Decimal? @db.Decimal(5, 2) // 成绩可为空，最多两位小数
+  enrolledAt DateTime @default(now()) // 选课时间
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade) // 删除学生时删除选课记录
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade) // 删除课程时删除选课记录
+
+  @@unique([studentId, courseId]) // 防止同一学生重复选择同一课程
+  @@index([courseId]) // 加速按课程查询选课记录
+}

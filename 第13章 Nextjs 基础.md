@@ -61,15 +61,16 @@ registry=http://registry.npmmirror.com
 ```shell
 $ pnpm create next-app@latest nextjs-learns --use-pnpm [--yes]
 ✔ Would you like to use the recommended Next.js defaults? › No, customize settings
-✔ Would you like to use TypeScript? … No / 【Yes】
-✔ Which linter would you like to use? › Biome
-✔ Would you like to use React Compiler? … No / 【Yes】
-✔ Would you like to use Tailwind CSS? … No / 【Yes】
-✔ Would you like your code inside a `src/` directory? … No / 【Yes】
-✔ Would you like to use App Router? (recommended) … No / 【Yes】
-✔ Would you like to use Turbopack? (recommended) … No / 【Yes】
-✔ Would you like to customize the import alias (`@/*` by default)? … No / 【Yes】
+✔ Would you like to use TypeScript? › Yes
+✔ Which linter would you like to use? › ESLint
+✔ Would you like to use React Compiler? › Yes
+✔ Would you like to use Tailwind CSS? › Yes
+✔ Would you like your code inside a `src/` directory? › Yes
+✔ Would you like to use App Router? (recommended) › Yes
+✔ Would you like to use Turbopack? (recommended) › Yes
+✔ Would you like to customize the import alias (`@/*` by default)? › Yes
 ✔ What import alias would you like configured? … @/*
+✔ Would you like to include AGENTS.md to guide coding agents to write up-to-date Next.js code? › Yes
 ```
 
 > 提示：`--yes` 会跳过提示，使用已保存的偏好或默认设置。
@@ -80,6 +81,14 @@ $ pnpm create next-app@latest nextjs-learns --use-pnpm [--yes]
 $ code nextjs-learns
 $ pnpm dev
 ```
+
+> 提示：`--api` 只会创建一个**仅包含 Route Handlers 的 API 项目**，并不是启用 **Backend for Frontend（BFF）** 的必要开关。BFF 通常需要同时提供页面和服务端接口，因此按上面的普通命令创建项目即可，再根据需要添加 `app/api/**/route.ts`。只有在项目本身是纯 API 服务时，才使用：
+>
+> ```shell
+> $ pnpm create next-app@latest nextjs-learns --api --use-pnpm [--yes]
+> ```
+>
+> 如果由 Next.js 直接访问数据库，应在 Server Component、Route Handler 或 Server Action 中使用 ORM/数据库客户端；数据库连接信息和凭据不能放到 Client Component 或浏览器端。
 
 # 开始
 
@@ -2448,6 +2457,420 @@ export default function RootLayout({ children }) {
 6. 使用 Lighthouse 检查 PWA 基础项。
 
 注意：PWA 通常要求 HTTPS，`localhost` 开发环境除外。
+
+# Prisma
+
+@See [Prisma ORM：Add to an existing PostgreSQL project ↗](https://www.prisma.io/docs/v7/prisma-orm/add-to-existing-project/postgresql)
+
+@See [Prisma ORM：CRUD ↗](https://www.prisma.io/docs/orm/v7/prisma-client/queries/crud)
+
+本节只介绍如何在已有 Next.js 项目中接入 PostgreSQL，以及 Prisma Client 的常用 API。完整业务建模与页面开发请参考 [《第15章 Nextjs + Prisma 实战：学生管理系统》](<./第15章 Nextjs + Prisma 实战：学生管理系统.md>)。
+
+示例固定使用 **Prisma ORM 7.10.0**，并且让 `prisma` 与 `@prisma/client` 使用相同版本，避免大版本升级后配置和 API 与本文不一致。
+
+## 安装依赖
+
+在 Next.js 项目根目录执行：
+
+```shell
+$ pnpm add -D prisma@7.10.0 @types/node @types/pg
+$ pnpm add @prisma/client@7.10.0 @prisma/adapter-pg pg dotenv server-only
+```
+
+> 提示：如果提示 [ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @prisma/engines@7.10.0, prisma@7.10.0
+>
+> 执行：
+>
+> ```shell
+> $ pnpm approve-builds
+> ```
+>
+> 然后在交互界面选择：
+>
+> ```
+> ☑️ @prisma/engines
+> ☑️ prisma
+> ```
+>
+> 允许它们执行 build scripts。
+
+各依赖的作用：
+
+| 依赖 | 作用 |
+| --- | --- |
+| `prisma` | Prisma CLI，用于初始化、迁移、生成 Client |
+| `@prisma/client` | 根据 Schema 生成的类型安全查询客户端 |
+| `@prisma/adapter-pg` | Prisma 连接 `node-postgres` 的 Driver Adapter |
+| `pg` | PostgreSQL 的 Node.js 驱动 |
+| `dotenv` | 让 Prisma CLI 从 `.env` 加载 `DATABASE_URL` |
+| `server-only` | 防止数据库模块被错误地导入到客户端代码 |
+
+Prisma 7 使用 ESM-first 的 `prisma-client` generator。若 `package.json` 中还没有 `type`，添加：
+
+```json
+{
+  "type": "module"
+}
+```
+
+如果已有 `scripts` 或其他字段，只需合并这个字段，不要覆盖原来的 `package.json`。
+
+## 初始化配置
+
+### 创建 Prisma 文件
+
+```shell
+$ pnpm exec prisma init --datasource-provider postgresql --output ../src/generated/prisma
+```
+
+这个命令会创建：
+
+```text
+.
+├── .env                    # 数据库连接字符串
+├── prisma.config.ts        # Prisma CLI 配置
+└── prisma/
+    └── schema.prisma      # 数据模型和生成器配置
+```
+
+如果项目中已经有 `prisma/` 目录，保留已有文件，并按照下面的内容检查配置，不要重复初始化。
+
+### 配置数据库连接
+
+在项目根目录的 `.env` 中填写 PostgreSQL 连接字符串：
+
+```ini
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nextjs_learns?schema=public"
+```
+
+连接字符串的格式是：
+
+```text
+postgresql://用户名:密码@主机:端口/数据库名?schema=模式名
+```
+
+例如云数据库通常会提供类似下面的地址：
+
+```ini
+DATABASE_URL="postgresql://user:password@db.example.com:5432/app?schema=public&sslmode=require"
+```
+
+注意：
+
+- `.env` 放在项目根目录，不要放进 `src/`。
+- `.env`、`.env.local` 等包含凭据的文件不要提交到 Git。
+- 用户名、密码中如果包含 `@`、`#`、`?`、`%` 等字符，需要先进行 URL 编码。
+- 不要添加 `NEXT_PUBLIC_` 前缀；带这个前缀的变量会被打包到浏览器端。
+
+### 配置 `prisma.config.ts`
+
+Prisma 7 将数据库 URL 放在 Prisma Config 中，而不是 `schema.prisma` 的 `datasource` 块中：
+
+```ts title="prisma.config.ts"
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+  },
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
+});
+```
+
+### 编写最小 Schema
+
+先定义一个最小模型，用于验证数据库连接和 Prisma Client 是否可以正常生成：
+
+```prisma title="prisma/schema.prisma"
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+`model Product` 生成的 Client 属性是 `prisma.product`。Prisma Client 使用 **Schema 中的模型名**，不直接使用 PostgreSQL 表名；模型名首字母会转换为小写。
+
+> 提示：建议安装 [Prisma ↪](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma) 插件，获得语法高亮和提示。
+
+## 同步 Schema 与数据库
+
+新数据库首次接入时执行：
+
+```shell
+$ pnpm exec prisma format
+$ pnpm exec prisma migrate dev --name init
+$ pnpm exec prisma generate
+```
+
+如果 PostgreSQL 已经存在表，先反向生成模型：
+
+```shell
+$ pnpm exec prisma db pull
+$ pnpm exec prisma generate
+```
+
+常用 CLI：
+
+| 命令 | 用途 |
+| --- | --- |
+| `prisma format` | 格式化 `schema.prisma` |
+| `prisma validate` | 校验 Schema 和配置 |
+| `prisma generate` | 根据 Schema 重新生成 Prisma Client |
+| `prisma migrate dev --name <name>` | 开发环境生成并应用迁移 |
+| `prisma migrate deploy` | 测试或生产环境应用已有迁移 |
+| `prisma db pull` | 从已有数据库反向生成模型 |
+| `prisma db push` | 不生成迁移，直接同步 Schema，适合原型 |
+| `prisma studio` | 打开可视化数据管理界面 |
+
+修改 Schema 后需要重新执行 `prisma generate`。`migrate dev` 可能在结构冲突时要求重置数据库；数据库不可丢弃时不要确认重置。
+
+## 在 Next.js 中创建 Prisma Client
+
+不要在每个页面或 Route Handler 中重复 `new PrismaClient()`。
+
+Next.js 开发环境的热更新可能因此创建大量数据库连接。把实例集中到 `src/lib/prisma.ts`，并在开发环境挂到 `globalThis`：
+
+```ts title="src/lib/prisma.ts"
+import "server-only";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/generated/prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+```
+
+这个模块只能在服务端使用：
+
+- 服务端组件可以直接导入 `prisma` 查询数据库。
+- Route Handler 可以导入 `prisma` 实现 `/api/**` 接口。
+- Server Action 可以导入 `prisma` 执行写操作。
+- 带有 `"use client"` 的组件、浏览器代码和 `proxy.ts` 不应导入它。
+- Prisma 使用 `pg` 时默认运行在 Node.js Runtime，不要随意把使用它的路由标记为 Edge Runtime。
+
+服务端组件、Route Handler 和 Server Action 都可以导入这个实例。例如在 Route Handler 中查询产品：
+
+```ts title="src/app/api/products/route.ts"
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  const products = await prisma.product.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  return Response.json(products);
+}
+```
+
+客户端组件不能直接导入 Prisma Client。如果浏览器需要读取数据，应请求 Route Handler，或由服务端组件查询后通过 Props 传入。
+
+## Prisma Client API 参考
+
+模型 API 的统一格式是：
+
+```text
+prisma.<modelName>.<method>({ ...options })
+```
+
+例如 Schema 中定义 `model Product`，对应 `prisma.product.create()` 和 `prisma.product.findMany()`。
+
+### 创建
+
+| API | 作用 | 主要参数 |
+| --- | --- | --- |
+| `prisma.<model>.create()` | 创建一条记录 | `data` |
+| `prisma.<model>.createMany()` | 批量创建，返回 `{ count }` | `data[]`、`skipDuplicates` |
+| `prisma.<model>.createManyAndReturn()` | 批量创建并返回记录 | `data[]`、`select` |
+
+```ts
+await prisma.product.create({
+  data: { name: "Keyboard", price: 299 },
+});
+```
+
+### 查询
+
+| API | 作用 | 找不到记录时 |
+| --- | --- | --- |
+| `prisma.<model>.findUnique()` | 按主键或唯一字段查询一条 | 返回 `null` |
+| `prisma.<model>.findUniqueOrThrow()` | 按主键或唯一字段查询一条 | 抛出异常 |
+| `prisma.<model>.findFirst()` | 查询第一条符合条件的记录 | 返回 `null` |
+| `prisma.<model>.findMany()` | 查询多条记录 | 返回空数组 |
+
+```ts
+await prisma.product.findMany({
+  where: { price: { gte: 100 } },
+  select: { id: true, name: true, price: true },
+  orderBy: { createdAt: "desc" },
+  skip: 0,
+  take: 20,
+});
+```
+
+### 更新
+
+| API | 作用 | 主要参数 |
+| --- | --- | --- |
+| `prisma.<model>.update()` | 更新一条记录 | `where`、`data` |
+| `prisma.<model>.updateMany()` | 批量更新，返回 `{ count }` | `where`、`data` |
+| `prisma.<model>.upsert()` | 有则更新，无则创建 | `where`、`update`、`create` |
+
+```ts
+await prisma.product.update({
+  where: { id: 1 },
+  data: { price: 259 },
+});
+```
+
+### 删除
+
+| API | 作用 | 主要参数 |
+| --- | --- | --- |
+| `prisma.<model>.delete()` | 删除一条记录 | `where` |
+| `prisma.<model>.deleteMany()` | 批量删除，返回 `{ count }` | `where` |
+
+```ts
+await prisma.product.delete({ where: { id: 1 } });
+```
+
+删除前应确认外键约束和 `onDelete` 行为。需要保留历史数据时，通常增加 `deletedAt` 或状态字段实现软删除。
+
+### 统计、聚合与事务
+
+| API | 作用 |
+| --- | --- |
+| `prisma.<model>.count()` | 统计记录数 |
+| `prisma.<model>.aggregate()` | 计算 `_count`、`_avg`、`_sum`、`_min`、`_max` |
+| `prisma.<model>.groupBy()` | 按字段分组并聚合 |
+| `prisma.$transaction([])` | 将一组独立操作放进同一事务 |
+| `prisma.$transaction(async tx => {})` | 执行包含业务逻辑的交互式事务 |
+
+多个操作必须全部成功或全部失败时使用事务：
+
+```ts
+const [products, total] = await prisma.$transaction([
+  prisma.product.findMany({ take: 20 }),
+  prisma.product.count(),
+]);
+```
+
+如果后一个操作依赖前一个操作的结果，使用交互式事务：
+
+```ts
+const result = await prisma.$transaction(async (tx) => {
+  const product = await tx.product.create({
+    data: { name: "Keyboard", price: 299 },
+  });
+
+  return tx.product.update({
+    where: { id: product.id },
+    data: { price: 259 },
+  });
+});
+```
+
+事务中不要执行缓慢的网络请求或长时间计算，以免长时间占用数据库连接。
+
+### 通用查询参数
+
+| 参数 | 用途 |
+| --- | --- |
+| `data` | 创建或更新的数据 |
+| `where` | 筛选条件；单条更新和删除通常要求唯一条件 |
+| `select` | 只返回指定字段 |
+| `include` | 同时加载关联记录 |
+| `orderBy` | 排序 |
+| `skip` / `take` | 偏移分页 |
+| `cursor` / `take` | 游标分页 |
+| `distinct` | 按字段去重 |
+
+常用 `where` 运算符包括 `equals`、`not`、`in`、`lt`、`lte`、`gt`、`gte`、`contains`、`startsWith`、`endsWith`、`AND`、`OR` 和 `NOT`。
+
+### 关系操作
+
+关系字段可以在 `data` 中嵌套操作：
+
+| 参数 | 作用 |
+| --- | --- |
+| `connect` | 连接已有记录 |
+| `disconnect` | 断开可选关系 |
+| `create` | 创建并连接关联记录 |
+| `connectOrCreate` | 存在则连接，否则创建 |
+| `set` | 重设整个关系集合 |
+| 嵌套 `update` / `upsert` / `delete` | 在主操作中修改关联记录 |
+
+### 原生 SQL
+
+| API | 作用 |
+| --- | --- |
+| `prisma.$queryRaw` | 执行查询并返回记录 |
+| `prisma.$executeRaw` | 执行不返回记录的 SQL |
+
+优先使用类型安全的模型 API。确实需要原生 SQL 时使用参数化的 Tagged Template，不要拼接用户输入。
+
+## 常见问题
+
+### Schema 改了但类型没有更新
+
+修改 `schema.prisma` 后，至少重新执行：
+
+```shell
+$ pnpm exec prisma format
+$ pnpm exec prisma generate
+```
+
+如果数据库结构也要同步，再执行 `pnpm exec prisma migrate dev --name <migration-name>`。
+
+### 部署后连接数过多或 Client 过期
+
+- 使用本文的单例模块，避免开发热更新反复创建 Client。
+- 无服务器部署时使用数据库服务商提供的连接池 URL，并按服务商要求设置连接数。
+- 把 `prisma generate` 放在部署构建流程中，例如 `package.json`：
+
+```json
+{
+  "scripts": {
+    "postinstall": "prisma generate"
+  }
+}
+```
+
+### 安全边界
+
+Prisma Client、`DATABASE_URL` 和数据库查询逻辑必须留在服务端。客户端组件只通过服务端组件、Route Handler 或 Server Action 获取经过筛选的数据；不要为了方便而把数据库连接字符串改成 `NEXT_PUBLIC_DATABASE_URL`。
 
 # 扩展
 
